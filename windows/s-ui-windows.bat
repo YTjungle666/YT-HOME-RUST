@@ -1,8 +1,8 @@
 @echo off
 setlocal enabledelayedexpansion
 
-REM S-UI Windows Control Script
-REM This script provides a menu-driven interface for managing S-UI on Windows
+REM YT HOME Windows Control Script
+REM This script provides a menu-driven interface for managing YT HOME on Windows
 
 cd /d "%~dp0"
 set "SERVICE_NAME=s-ui"
@@ -12,18 +12,18 @@ if "%INSTALL_DIR%"=="" set "INSTALL_DIR=C:\Program Files\s-ui"
 :menu
 cls
 echo ========================================
-echo S-UI Windows Control Panel
+echo YT HOME Windows Control Panel
 echo ========================================
 echo.
 echo Current directory: %INSTALL_DIR%
 echo.
-echo 1. Start S-UI Service
-echo 2. Stop S-UI Service
-echo 3. Restart S-UI Service
+echo 1. Start YT HOME Service
+echo 2. Stop YT HOME Service
+echo 3. Restart YT HOME Service
 echo 4. Check Service Status
 echo 5. View Service Logs
 echo 6. Open Panel in Browser
-echo 7. Run S-UI Manually
+echo 7. Run YT HOME Manually
 echo 8. Install/Uninstall Service
 echo 9. Open Installation Directory
 echo 10. Show Configuration
@@ -49,7 +49,7 @@ if "%choice%"=="0" goto exit
 goto invalid_choice
 
 :start_service
-echo Starting S-UI service...
+echo Starting YT HOME service...
 net start %SERVICE_NAME%
 if %errorLevel% equ 0 (
     echo Service started successfully!
@@ -60,7 +60,7 @@ pause
 goto menu
 
 :stop_service
-echo Stopping S-UI service...
+echo Stopping YT HOME service...
 net stop %SERVICE_NAME%
 if %errorLevel% equ 0 (
     echo Service stopped successfully!
@@ -71,7 +71,7 @@ pause
 goto menu
 
 :restart_service
-echo Restarting S-UI service...
+echo Restarting YT HOME service...
 net stop %SERVICE_NAME% >nul 2>&1
 timeout /t 2 /nobreak >nul
 net start %SERVICE_NAME%
@@ -84,7 +84,7 @@ pause
 goto menu
 
 :check_status
-echo Checking S-UI service status...
+echo Checking YT HOME service status...
 sc query %SERVICE_NAME%
 echo.
 echo Service status details:
@@ -95,7 +95,7 @@ pause
 goto menu
 
 :view_logs
-echo Opening S-UI logs...
+echo Opening YT HOME logs...
 if exist "%INSTALL_DIR%\logs" (
     start "" "%INSTALL_DIR%\logs"
 ) else (
@@ -105,22 +105,22 @@ pause
 goto menu
 
 :open_panel
-echo Opening S-UI panel in browser...
+echo Opening YT HOME panel in browser...
 start http://localhost:2095
 echo Panel opened in default browser.
 pause
 goto menu
 
 :run_manual
-echo Running S-UI manually...
+echo Running YT HOME manually...
 if exist "%INSTALL_DIR%\sui.exe" (
     cd /d "%INSTALL_DIR%"
-    echo Starting S-UI in current window...
+    echo Starting YT HOME in current window...
     echo Press Ctrl+C to stop
     echo.
     sui.exe
 ) else (
-    echo S-UI executable not found: %INSTALL_DIR%\sui.exe
+    echo YT HOME executable not found: %INSTALL_DIR%\sui.exe
     echo Please run the installer first.
 )
 pause
@@ -191,7 +191,7 @@ goto menu
 :show_config
 echo.
 echo ========================================
-echo S-UI Configuration
+echo YT HOME Configuration
 echo ========================================
 if exist "%INSTALL_DIR%\sui.exe" (
     cd /d "%INSTALL_DIR%"
@@ -201,7 +201,7 @@ if exist "%INSTALL_DIR%\sui.exe" (
     echo Admin credentials:
     sui.exe admin -show
 ) else (
-    echo S-UI executable not found. Please run the installer first.
+    echo YT HOME executable not found. Please run the installer first.
 )
 pause
 goto menu
@@ -233,5 +233,5 @@ pause
 goto menu
 
 :exit
-echo Thank you for using S-UI Windows Control Panel!
+echo Thank you for using YT HOME Windows Control Panel!
 exit /b 0

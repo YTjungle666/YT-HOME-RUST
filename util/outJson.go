@@ -89,7 +89,8 @@ func addTls(out *map[string]interface{}, tls *model.Tls) {
 	if enabled, ok := tlsServer["enabled"]; ok {
 		tlsConfig["enabled"] = enabled
 	}
-	if serverName, ok := tlsServer["server_name"]; ok {
+	serverName, _ := tlsServer["server_name"].(string)
+	if serverName != "" {
 		tlsConfig["server_name"] = serverName
 	}
 	if alpn, ok := tlsServer["alpn"]; ok {
@@ -110,6 +111,13 @@ func addTls(out *map[string]interface{}, tls *model.Tls) {
 	if reality, ok := tlsServer["reality"].(map[string]interface{}); ok && reality["enabled"].(bool) {
 		realityConfig := tlsConfig["reality"].(map[string]interface{})
 		realityConfig["enabled"] = true
+		if serverName == "" {
+			if handshake, ok := reality["handshake"].(map[string]interface{}); ok {
+				if fallbackServer, ok := handshake["server"].(string); ok && fallbackServer != "" {
+					tlsConfig["server_name"] = fallbackServer
+				}
+			}
+		}
 		if shortIDs, ok := reality["short_id"].([]interface{}); ok && len(shortIDs) > 0 {
 			realityConfig["short_id"] = shortIDs[common.RandomInt(len(shortIDs))]
 		}

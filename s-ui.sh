@@ -4,6 +4,7 @@ red='\033[0;31m'
 green='\033[0;32m'
 yellow='\033[0;33m'
 plain='\033[0m'
+repo="YTjungle666/YT-HOME"
 
 function LOGD() {
     echo -e "${yellow}[DEG] $* ${plain}"
@@ -63,7 +64,7 @@ before_show_menu() {
 }
 
 install() {
-    bash <(curl -Ls https://raw.githubusercontent.com/alireza0/s-ui/main/install.sh)
+    bash <(curl -Ls https://raw.githubusercontent.com/${repo}/main/install.sh)
     if [[ $? == 0 ]]; then
         if [[ $# == 0 ]]; then
             start
@@ -82,7 +83,7 @@ update() {
         fi
         return 0
     fi
-    bash <(curl -Ls https://raw.githubusercontent.com/alireza0/s-ui/main/install.sh)
+    bash <(curl -Ls https://raw.githubusercontent.com/${repo}/main/install.sh)
     if [[ $? == 0 ]]; then
         LOGI "Update is complete, Panel has automatically restarted "
         exit 0
@@ -98,7 +99,7 @@ custom_version() {
     exit 1
     fi
 
-    download_link="https://raw.githubusercontent.com/alireza0/s-ui/master/install.sh"
+    download_link="https://raw.githubusercontent.com/${repo}/main/install.sh"
 
     install_command="bash <(curl -Ls $download_link) $panel_version"
 
@@ -295,7 +296,7 @@ show_log() {
 }
 
 update_shell() {
-    wget -O /usr/bin/s-ui -N --no-check-certificate https://github.com/alireza0/s-ui/raw/main/s-ui.sh
+    wget -O /usr/bin/s-ui -N --no-check-certificate https://github.com/${repo}/raw/main/s-ui.sh
     if [[ $? != 0 ]]; then
         echo ""
         LOGE "Failed to download script, Please check whether the machine can connect Github"
@@ -772,7 +773,7 @@ generate_self_signed_cert() {
 }
 
 show_usage() {
-    echo -e "S-UI Control Menu Usage"
+    echo -e "YT HOME Control Menu Usage"
     echo -e "------------------------------------------"
     echo -e "SUBCOMMANDS:" 
     echo -e "s-ui              - Admin Management Script"
@@ -792,7 +793,7 @@ show_usage() {
 
 show_menu() {
   echo -e "
-  ${green}S-UI Admin Management Script ${plain}
+  ${green}YT HOME Admin Management Script ${plain}
 ————————————————————————————————
   ${green}0.${plain} Exit
 ————————————————————————————————
@@ -809,13 +810,13 @@ show_menu() {
   ${green}9.${plain} Set Panel settings
   ${green}10.${plain} View Panel Settings
 ————————————————————————————————
-  ${green}11.${plain} S-UI Start
-  ${green}12.${plain} S-UI Stop
-  ${green}13.${plain} S-UI Restart
-  ${green}14.${plain} S-UI Check State
-  ${green}15.${plain} S-UI Check Logs
-  ${green}16.${plain} S-UI Enable Autostart
-  ${green}17.${plain} S-UI Disable Autostart
+  ${green}11.${plain} YT HOME Start
+  ${green}12.${plain} YT HOME Stop
+  ${green}13.${plain} YT HOME Restart
+  ${green}14.${plain} YT HOME Check State
+  ${green}15.${plain} YT HOME Check Logs
+  ${green}16.${plain} YT HOME Enable Autostart
+  ${green}17.${plain} YT HOME Disable Autostart
 ————————————————————————————————
   ${green}18.${plain} Enable or Disable BBR
   ${green}19.${plain} SSL Certificate Management

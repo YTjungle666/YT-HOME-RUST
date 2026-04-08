@@ -8,6 +8,8 @@ type Inbound struct {
 	Id   uint   `json:"id" form:"id" gorm:"primaryKey;autoIncrement"`
 	Type string `json:"type" form:"type"`
 	Tag  string `json:"tag" form:"tag" gorm:"unique"`
+	// Panel-only option. It is stored in DB but not passed to sing-box.
+	ProxyHome *bool `json:"proxy_home,omitempty" form:"proxy_home" gorm:"column:allow_lan_access"`
 
 	// Foreign key to tls table
 	TlsId uint `json:"tls_id" form:"tls_id"`
@@ -34,6 +36,13 @@ func (i *Inbound) UnmarshalJSON(data []byte) error {
 	delete(raw, "type")
 	i.Tag, _ = raw["tag"].(string)
 	delete(raw, "tag")
+	if val, exists := raw["proxy_home"].(bool); exists {
+		i.ProxyHome = &val
+	} else if val, exists := raw["allow_lan_access"].(bool); exists {
+		i.ProxyHome = &val
+	}
+	delete(raw, "proxy_home")
+	delete(raw, "allow_lan_access")
 
 	// TlsId
 	if val, exists := raw["tls_id"].(float64); exists {
@@ -85,6 +94,7 @@ func (i Inbound) MarshalFull() (*map[string]interface{}, error) {
 	combined["id"] = i.Id
 	combined["type"] = i.Type
 	combined["tag"] = i.Tag
+	combined["proxy_home"] = i.IsProxyHomeEnabled()
 	combined["tls_id"] = i.TlsId
 	combined["addrs"] = i.Addrs
 	combined["out_json"] = i.OutJson
@@ -100,4 +110,8 @@ func (i Inbound) MarshalFull() (*map[string]interface{}, error) {
 		}
 	}
 	return &combined, nil
+}
+
+func (i Inbound) IsProxyHomeEnabled() bool {
+	return i.ProxyHome != nil && *i.ProxyHome
 }

@@ -55,10 +55,11 @@ func (s *InboundService) GetAll() (*[]map[string]interface{}, error) {
 		var shadowtls_version uint
 		ss_managed := false
 		inbData := map[string]interface{}{
-			"id":     inbound.Id,
-			"type":   inbound.Type,
-			"tag":    inbound.Tag,
-			"tls_id": inbound.TlsId,
+			"id":         inbound.Id,
+			"type":       inbound.Type,
+			"tag":        inbound.Tag,
+			"proxy_home": inbound.IsProxyHomeEnabled(),
+			"tls_id":     inbound.TlsId,
 		}
 		if inbound.Options != nil {
 			var restFields map[string]json.RawMessage

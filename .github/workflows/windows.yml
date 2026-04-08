@@ -1,4 +1,4 @@
-name: Build S-UI for Windows
+name: Build YT HOME for Windows
 
 on:
   workflow_dispatch:
@@ -29,7 +29,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6.0.2
         with:
-          submodules: recursive
           fetch-depth: 1
 
       - name: Setup Node.js
@@ -41,7 +40,7 @@ jobs:
       - name: Build frontend
         run: |
           cd frontend
-          npm install
+          npm ci
           npm run build
           cd ..
 

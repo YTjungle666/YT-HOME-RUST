@@ -124,6 +124,15 @@ func prepareTls(t *model.Tls) map[string]interface{} {
 			oTls["reality"] = clientReality
 		}
 	}
+	if serverName, _ := oTls["server_name"].(string); serverName == "" {
+		if reality, ok := iTls["reality"].(map[string]interface{}); ok {
+			if handshake, ok := reality["handshake"].(map[string]interface{}); ok {
+				if fallbackServer, ok := handshake["server"].(string); ok && fallbackServer != "" {
+					oTls["server_name"] = fallbackServer
+				}
+			}
+		}
+	}
 	return oTls
 }
 

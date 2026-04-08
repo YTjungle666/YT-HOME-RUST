@@ -30,12 +30,13 @@ func (s *SubHandler) subs(c *gin.Context) {
 	var err error
 	subId := c.Param("subid")
 	format, isFormat := c.GetQuery("format")
+	inboundRef, _ := c.GetQuery("inbound")
 	if isFormat {
 		switch format {
 		case "json":
-			result, headers, err = s.JsonService.GetJson(subId, format)
+			result, headers, err = s.JsonService.GetJson(subId, inboundRef)
 		case "clash":
-			result, headers, err = s.ClashService.GetClash(subId)
+			result, headers, err = s.ClashService.GetClash(subId, inboundRef)
 		}
 		if err != nil || result == nil {
 			logger.Error(err)

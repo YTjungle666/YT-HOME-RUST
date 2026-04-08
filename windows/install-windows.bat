@@ -2,7 +2,7 @@
 setlocal enabledelayedexpansion
 
 echo ========================================
-echo S-UI Windows Installer
+echo YT HOME Windows Installer
 echo ========================================
 
 REM Check if running as Administrator
@@ -19,7 +19,7 @@ REM Set installation directory
 set "INSTALL_DIR=C:\Program Files\s-ui"
 set "SERVICE_NAME=s-ui"
 
-echo Installing S-UI to: %INSTALL_DIR%
+echo Installing YT HOME to: %INSTALL_DIR%
 
 REM Create installation directory
 if not exist "%INSTALL_DIR%" mkdir "%INSTALL_DIR%"
@@ -89,8 +89,8 @@ echo.
 set /p panel_port="Enter panel port (default: 2095): "
 if "%panel_port%"=="" set "panel_port=2095"
 
-set /p panel_path="Enter panel path (default: /app/): "
-if "%panel_path%"=="" set "panel_path=/app/"
+set /p panel_path="Enter panel path (default: /): "
+if "%panel_path%"=="" set "panel_path=/"
 
 set /p sub_port="Enter subscription port (default: 2096): "
 if "%sub_port%"=="" set "sub_port=2096"
@@ -125,7 +125,7 @@ echo Setting admin credentials...
 sui.exe admin -username "%admin_username%" -password "%admin_password%"
 
 REM Start service
-echo Starting S-UI service...
+echo Starting YT HOME service...
 net start %SERVICE_NAME%
 if %errorLevel% equ 0 (
     echo Service started successfully
@@ -137,7 +137,7 @@ REM Create desktop shortcut
 echo Creating desktop shortcut...
 set "DESKTOP=%USERPROFILE%\Desktop"
 if exist "%DESKTOP%" (
-    powershell -Command "& {$WshShell = New-Object -comObject WScript.Shell; $Shortcut = $WshShell.CreateShortcut('%DESKTOP%\S-UI.lnk'); $Shortcut.TargetPath = '%INSTALL_DIR%\s-ui-windows.bat'; $Shortcut.WorkingDirectory = '%INSTALL_DIR%'; $Shortcut.Description = 'S-UI Control Panel'; $Shortcut.Save()}"
+    powershell -Command "& {$WshShell = New-Object -comObject WScript.Shell; $Shortcut = $WshShell.CreateShortcut('%DESKTOP%\YT HOME.lnk'); $Shortcut.TargetPath = '%INSTALL_DIR%\s-ui-windows.bat'; $Shortcut.WorkingDirectory = '%INSTALL_DIR%'; $Shortcut.Description = 'YT HOME Control Panel'; $Shortcut.Save()}"
     echo Desktop shortcut created
 )
 
@@ -145,8 +145,8 @@ REM Create Start Menu shortcut
 echo Creating Start Menu shortcut...
 set "START_MENU=%APPDATA%\Microsoft\Windows\Start Menu\Programs"
 if exist "%START_MENU%" (
-    if not exist "%START_MENU%\S-UI" mkdir "%START_MENU%\S-UI"
-    powershell -Command "& {$WshShell = New-Object -comObject WScript.Shell; $Shortcut = $WshShell.CreateShortcut('%START_MENU%\S-UI\S-UI Control Panel.lnk'); $Shortcut.TargetPath = '%INSTALL_DIR%\s-ui-windows.bat'; $Shortcut.WorkingDirectory = '%INSTALL_DIR%'; $Shortcut.Description = 'S-UI Control Panel'; $Shortcut.Save()}"
+    if not exist "%START_MENU%\YT HOME" mkdir "%START_MENU%\YT HOME"
+    powershell -Command "& {$WshShell = New-Object -comObject WScript.Shell; $Shortcut = $WshShell.CreateShortcut('%START_MENU%\YT HOME\YT HOME Control Panel.lnk'); $Shortcut.TargetPath = '%INSTALL_DIR%\s-ui-windows.bat'; $Shortcut.WorkingDirectory = '%INSTALL_DIR%'; $Shortcut.Description = 'YT HOME Control Panel'; $Shortcut.Save()}"
     echo Start Menu shortcut created
 )
 
@@ -166,7 +166,7 @@ echo ========================================
 echo Installation completed successfully!
 echo ========================================
 echo.
-echo S-UI has been installed to: %INSTALL_DIR%
+echo YT HOME has been installed to: %INSTALL_DIR%
 echo.
 echo Configuration:
 echo   Panel Port: %panel_port%

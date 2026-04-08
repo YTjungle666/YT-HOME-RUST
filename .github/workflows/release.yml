@@ -1,4 +1,4 @@
-name: Release S-UI
+name: Release YT HOME
 
 on:
   workflow_dispatch:
@@ -31,7 +31,6 @@ jobs:
       - name: Checkout repository (frontend only)
         uses: actions/checkout@v6.0.2
         with:
-          submodules: recursive
           fetch-depth: 1
 
       - name: Setup Node.js
@@ -44,7 +43,7 @@ jobs:
       - name: Build frontend
         run: |
           cd frontend
-          npm install
+          npm ci
           npm run build
           cd ..
 

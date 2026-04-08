@@ -44,11 +44,11 @@ var defaultConfig = `{
 var defaultValueMap = map[string]string{
 	"webListen":     "",
 	"webDomain":     "",
-	"webPort":       "2095",
+	"webPort":       "80",
 	"secret":        common.Random(32),
 	"webCertFile":   "",
 	"webKeyFile":    "",
-	"webPath":       "/app/",
+	"webPath":       "/",
 	"webURI":        "",
 	"sessionMaxAge": "0",
 	"trafficAge":    "30",

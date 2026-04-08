@@ -1,16 +1,18 @@
 ---
 services:
   s-ui:
-    image: alireza7/s-ui
-    container_name: s-ui
-    hostname: "s-ui"
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: yt-home
+    hostname: "yt-home"
     volumes:
       - "./db:/app/db"
       - "./cert:/app/cert"
     tty: true
     restart: unless-stopped
     ports:
-      - "2095:2095"
+      - "80:80"
       - "2096:2096"
     networks:
       - s-ui
@@ -19,4 +21,4 @@ services:
 networks:
   s-ui:
     driver: bridge
-  
+

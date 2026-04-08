@@ -1,6 +1,7 @@
 package sub
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/alireza0/s-ui/logger"
@@ -61,9 +62,13 @@ const ProxyGroups = `- name: Proxy
   tolerance: 50
 `
 
-func (s *ClashService) GetClash(subId string) (*string, []string, error) {
+func (s *ClashService) GetClash(subId string, inboundRef string) (*string, []string, error) {
 
 	client, inDatas, err := s.getData(subId)
+	if err != nil {
+		return nil, nil, err
+	}
+	inDatas, err = filterSubscriptionInbounds(inDatas, inboundRef)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -73,22 +78,32 @@ func (s *ClashService) GetClash(subId string) (*string, []string, error) {
 		return nil, nil, err
 	}
 
-	links := s.LinkService.GetLinks(&client.Links, "external", "")
-	tagNumEnable := 0
-	if len(links) > 1 {
-		tagNumEnable = 1
-	}
-	for index, link := range links {
-		json, tag, err := util.GetOutbound(link, (index+1)*tagNumEnable)
-		if err == nil && len(tag) > 0 {
-			*outbounds = append(*outbounds, *json)
-			*outTags = append(*outTags, tag)
+	if inboundRef == "" {
+		links := s.LinkService.GetLinks(&client.Links, "external", "")
+		tagNumEnable := 0
+		if len(links) > 1 {
+			tagNumEnable = 1
+		}
+		for index, link := range links {
+			json, tag, err := util.GetOutbound(link, (index+1)*tagNumEnable)
+			if err == nil && len(tag) > 0 {
+				*outbounds = append(*outbounds, *json)
+				*outTags = append(*outTags, tag)
+			}
 		}
 	}
 
-	basicConfig, err := s.getClashConfig()
-	if err != nil || len(basicConfig) == 0 {
-		basicConfig = basicClashConfig
+	var basicConfig string
+	if inboundRef != "" && service.HasInboundProxyHomeEnabled(inDatas) {
+		basicConfig, err = s.buildHomeProxyClashConfig(*outbounds)
+		if err != nil {
+			return nil, nil, err
+		}
+	} else {
+		basicConfig, err = s.getClashConfig()
+		if err != nil || len(basicConfig) == 0 {
+			basicConfig = basicClashConfig
+		}
 	}
 
 	resultStr, err := s.ConvertToClashMeta(outbounds, basicConfig)
@@ -109,6 +124,44 @@ func (s *ClashService) getClashConfig() (string, error) {
 	}
 
 	return subClashExt, nil
+}
+
+func (s *ClashService) buildHomeProxyClashConfig(outbounds []map[string]interface{}) (string, error) {
+	output := map[string]interface{}{
+		"mixed-port":          7890,
+		"allow-lan":           false,
+		"mode":                "global",
+		"log-level":           "info",
+		"external-controller": "127.0.0.1:9090",
+		"tun": map[string]interface{}{
+			"enable":                true,
+			"stack":                 "system",
+			"auto-route":            true,
+			"auto-detect-interface": true,
+		},
+	}
+	if server := firstProxyServer(outbounds); server != "" {
+		output["dns"] = map[string]interface{}{
+			"enable":     true,
+			"ipv6":       false,
+			"nameserver": []string{formatClashDNSServer(server)},
+		}
+	}
+	result, err := yaml.Marshal(output)
+	if err != nil {
+		return "", err
+	}
+	return string(result), nil
+}
+
+func formatClashDNSServer(server string) string {
+	if server == "" {
+		return ""
+	}
+	if strings.Contains(server, ":") && !strings.Contains(server, ".") && !(strings.HasPrefix(server, "[") && strings.HasSuffix(server, "]")) {
+		server = "[" + server + "]"
+	}
+	return fmt.Sprintf("udp://%s:53", server)
 }
 
 func (s *ClashService) ConvertToClashMeta(outbounds *[]map[string]interface{}, basicConfig string) (string, error) {

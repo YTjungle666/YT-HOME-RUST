@@ -1,6 +1,6 @@
 # Windows Files
 
-This directory contains all Windows-specific files for S-UI.
+This directory contains all Windows-specific files for YT HOME.
 
 ## Available Files:
 
@@ -13,7 +13,7 @@ This directory contains all Windows-specific files for S-UI.
 
 ## Usage:
 
-To install S-UI on Windows:
+To install YT HOME on Windows:
 1. Run `install-windows.bat` as Administrator
 2. Follow the installation wizard
 3. Use `s-ui-windows.bat` for management

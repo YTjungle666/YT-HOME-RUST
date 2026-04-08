@@ -43,15 +43,21 @@ const defaultJson = `
 }
 `
 
+const defaultHomeProxyJson = defaultJson
+
 type JsonService struct {
 	service.SettingService
 	LinkService
 }
 
-func (j *JsonService) GetJson(subId string, format string) (*string, []string, error) {
+func (j *JsonService) GetJson(subId string, inboundRef string) (*string, []string, error) {
 	var jsonConfig map[string]interface{}
 
 	client, inDatas, err := j.getData(subId)
+	if err != nil {
+		return nil, nil, err
+	}
+	inDatas, err = filterSubscriptionInbounds(inDatas, inboundRef)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -61,30 +67,49 @@ func (j *JsonService) GetJson(subId string, format string) (*string, []string, e
 		return nil, nil, err
 	}
 
-	links := j.LinkService.GetLinks(&client.Links, "external", "")
-	tagNumEnable := 0
-	if len(links) > 1 {
-		tagNumEnable = 1
-	}
-	for index, link := range links {
-		json, tag, err := util.GetOutbound(link, (index+1)*tagNumEnable)
-		if err == nil && len(tag) > 0 {
-			*outbounds = append(*outbounds, *json)
-			*outTags = append(*outTags, tag)
+	if inboundRef == "" {
+		links := j.LinkService.GetLinks(&client.Links, "external", "")
+		tagNumEnable := 0
+		if len(links) > 1 {
+			tagNumEnable = 1
+		}
+		for index, link := range links {
+			json, tag, err := util.GetOutbound(link, (index+1)*tagNumEnable)
+			if err == nil && len(tag) > 0 {
+				*outbounds = append(*outbounds, *json)
+				*outTags = append(*outTags, tag)
+			}
 		}
 	}
 
-	j.addDefaultOutbounds(outbounds, outTags)
+	if inboundRef != "" && service.HasInboundProxyHomeEnabled(inDatas) {
+		err = json.Unmarshal([]byte(defaultHomeProxyJson), &jsonConfig)
+		if err != nil {
+			return nil, nil, err
+		}
+		homeDNS := buildHomeProxyDNS(*outbounds)
+		j.addHomeProxyOutbounds(outbounds, outTags)
+		jsonConfig["outbounds"] = outbounds
+		jsonConfig["route"] = map[string]interface{}{
+			"auto_detect_interface": true,
+			"final":                 "proxy",
+		}
+		if homeDNS != nil {
+			jsonConfig["dns"] = homeDNS
+		}
+	} else {
+		j.addDefaultOutbounds(outbounds, outTags)
 
-	err = json.Unmarshal([]byte(defaultJson), &jsonConfig)
-	if err != nil {
-		return nil, nil, err
+		err = json.Unmarshal([]byte(defaultJson), &jsonConfig)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		jsonConfig["outbounds"] = outbounds
+
+		// Add other objects from settings
+		j.addOthers(&jsonConfig)
 	}
-
-	jsonConfig["outbounds"] = outbounds
-
-	// Add other objects from settings
-	j.addOthers(&jsonConfig)
 
 	result, _ := json.MarshalIndent(jsonConfig, "", "  ")
 	resultStr := string(result)
@@ -231,7 +256,7 @@ func (j *JsonService) addDefaultOutbounds(outbounds *[]map[string]interface{}, o
 		{
 			"tag":       "auto",
 			"type":      "urltest",
-			"outbounds": outTags,
+			"outbounds": *outTags,
 			"url":       "http://www.gstatic.com/generate_204",
 			"interval":  "10m",
 			"tolerance": 50,
@@ -242,6 +267,66 @@ func (j *JsonService) addDefaultOutbounds(outbounds *[]map[string]interface{}, o
 		},
 	}
 	*outbounds = append(outbound, *outbounds...)
+}
+
+func (j *JsonService) addHomeProxyOutbounds(outbounds *[]map[string]interface{}, outTags *[]string) {
+	if len(*outTags) == 0 {
+		return
+	}
+	selectorOutbounds := append([]string{}, (*outTags)...)
+	baseOutbounds := []map[string]interface{}{}
+	if len(*outTags) > 1 {
+		baseOutbounds = append(baseOutbounds, map[string]interface{}{
+			"tag":       "auto",
+			"type":      "urltest",
+			"outbounds": *outTags,
+			"url":       "http://www.gstatic.com/generate_204",
+			"interval":  "10m",
+			"tolerance": 50,
+		})
+		selectorOutbounds = append([]string{"auto"}, selectorOutbounds...)
+	}
+	baseOutbounds = append([]map[string]interface{}{
+		{
+			"outbounds": selectorOutbounds,
+			"tag":       "proxy",
+			"type":      "selector",
+		},
+	}, baseOutbounds...)
+	*outbounds = append(baseOutbounds, *outbounds...)
+}
+
+func buildHomeProxyDNS(outbounds []map[string]interface{}) map[string]interface{} {
+	server := firstProxyServer(outbounds)
+	if server == "" {
+		return nil
+	}
+	return map[string]interface{}{
+		"servers": []map[string]interface{}{
+			{
+				"tag":         "proxy-dns",
+				"type":        "udp",
+				"server":      server,
+				"server_port": 53,
+				"detour":      "proxy",
+			},
+		},
+		"final": "proxy-dns",
+	}
+}
+
+func firstProxyServer(outbounds []map[string]interface{}) string {
+	for _, outbound := range outbounds {
+		t, _ := outbound["type"].(string)
+		if t == "selector" || t == "urltest" || t == "direct" {
+			continue
+		}
+		server, _ := outbound["server"].(string)
+		if server != "" {
+			return server
+		}
+	}
+	return ""
 }
 
 func (j *JsonService) addOthers(jsonConfig *map[string]interface{}) error {
