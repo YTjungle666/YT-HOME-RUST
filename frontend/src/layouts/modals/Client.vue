@@ -126,7 +126,7 @@
                   <v-btn variant="tonal" @click="shuffle()">{{ $t('reset') + ' - ' + $t('all') }}<v-icon icon="mdi-refresh" /></v-btn>
                 </v-col>
               </v-row>
-              <v-row v-for="key in Object.keys(clientConfig)">
+              <v-row v-for="key in Object.keys(clientConfig)" :key="key">
                 <v-col cols="12" md="3" align="end" align-self="center">
                     {{ key }}
                     <v-icon @click="shuffle(key)" icon="mdi-refresh" v-tooltip:top="$t('reset')" />
@@ -160,7 +160,7 @@
               </v-row>
             </v-window-item>
             <v-window-item value="t3">
-              <v-row v-for="(lnk, index) in links">
+              <v-row v-for="(lnk, index) in links" :key="`${lnk.type}-${lnk.uri || index}`">
                 <v-col cols="auto">{{ index + 1 }}</v-col>
                 <v-col style="direction: ltr; overflow-y: hidden;">{{ lnk.uri }}</v-col>
               </v-row>
@@ -169,7 +169,7 @@
                   <v-btn color="primary" @click="extLinks.push({ type: 'external', uri: ''})">{{ $t('actions.add') }} {{ $t('client.external') }}</v-btn>
                 </v-col>
               </v-row>
-              <v-row v-for="(lnk, index) in extLinks">
+              <v-row v-for="(lnk, index) in extLinks" :key="`ext-${lnk.uri || index}`">
                 <v-col>
                   <v-text-field
                   dir="ltr"
@@ -185,7 +185,7 @@
                   <v-btn color="primary" @click="subLinks.push({ type: 'sub', uri: ''})">{{ $t('actions.add') }} {{ $t('client.sub') }}</v-btn>
                 </v-col>
               </v-row>
-              <v-row v-for="(lnk, index) in subLinks">
+              <v-row v-for="(lnk, index) in subLinks" :key="`sub-${lnk.uri || index}`">
                 <v-col>
                   <v-text-field
                   dir="ltr"

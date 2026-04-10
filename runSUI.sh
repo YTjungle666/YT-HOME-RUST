@@ -1,2 +1,2 @@
 ./build.sh
-SUI_DB_FOLDER="db" SUI_DEBUG=true ./sui
+SUI_SING_BOX_BIN="./sing-box" SUI_DB_FOLDER="db" ./sui

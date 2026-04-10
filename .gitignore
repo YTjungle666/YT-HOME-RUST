@@ -1,13 +1,20 @@
 .DS_Store
-dist/
-release/
-backup/
-bin/
-db/
-sui
-web/html
-main
-tmp
+/dist/
+/release/
+/backup/
+/bin/
+/db/
+/sui
+/sing-box
+/libcronet.so
+/packaging/docker/sui
+/target/
+/migrations/
+/web/
+/web/html
+/frontend/dist/
+/main
+/tmp
 .sync*
 *.tar.gz
 # local env files
@@ -21,10 +28,10 @@ tmp
 # Windows build artifacts
 *.exe
 *.zip
-s-ui-windows/
-sui-*.exe
-sui-*.zip
-windows/sui-*.exe
+/s-ui-windows/
+/sui-*.exe
+/sui-*.zip
+/windows/sui-*.exe
 
 # Editor directories and files
 .idea

@@ -136,8 +136,8 @@ export default {
   },
   methods: {
     resetData() {
-      this.count = 1,
-      this.clients = [],
+      this.count = 1
+      this.clients = []
       this.bulkData = {
         name: [this.patterns[1], "-", this.patterns[0]],
         desc: [],

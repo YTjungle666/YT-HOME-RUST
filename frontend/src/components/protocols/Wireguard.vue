@@ -109,7 +109,7 @@
       {{ $t('types.wg.peers') }}
       <v-chip color="primary" density="compact" variant="elevated" @click="addPeer"><v-icon icon="mdi-plus" /></v-chip>
     </v-card-subtitle>
-    <template v-for="(p, index) in data.peers">
+    <template v-for="(p, index) in data.peers" :key="`${p.public_key ?? 'peer'}-${index}`">
       <v-card style="margin-top: 1rem;">
         <v-card-subtitle>
           {{ $t('types.wg.peer') + ' ' + (Number(index)+1) }} <v-icon color="error" icon="mdi-delete" @click="delPeer(Number(index))" />

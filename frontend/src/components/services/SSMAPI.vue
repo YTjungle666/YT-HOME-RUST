@@ -3,7 +3,7 @@
     <v-card-subtitle>Shadowsocks API
       <v-chip color="primary" density="compact" variant="elevated" @click="add_server"><v-icon icon="mdi-plus" /></v-chip>
     </v-card-subtitle>
-    <v-row v-for="(server, index) in servers">
+    <v-row v-for="(server, index) in servers" :key="`${server.name}-${index}`">
       <v-col cols="auto" align-self="center" justify-self="center">
         <v-icon @click="del_server(index)" color="error" icon="mdi-delete" />
       </v-col>
@@ -44,17 +44,17 @@ export default {
       this.servers = [...this.servers, {name: "/ss" + this.servers.length, value: this.ssTags[0] || ""}]
     },
     del_server(i:number) {
-      let h = this.servers
+      const h = this.servers
       h.splice(i,1)
       this.servers = h
     },
     update_key(i:number,k:string) {
-      let h = this.servers
+      const h = this.servers
       h[i].name = k
       this.servers = h
     },
     update_value(i:number,v:string) {
-      let h = this.servers
+      const h = this.servers
       h[i].value = v
       this.servers = h
     },
@@ -62,7 +62,7 @@ export default {
   computed: {
     servers: {
       get() :Server[] {
-        let servers: Server[] = []
+        const servers: Server[] = []
         const h = this.$props.data.servers
         if (h) {
           Object.keys(h).forEach(key => {
@@ -77,7 +77,7 @@ export default {
       },
       set(v:Server[]) {
         if (v.length>0) {
-          let servers:any = {}
+          const servers:any = {}
           v.forEach((h:Server) => {
             if (servers[h.name]) {
               if (Array.isArray(servers[h.name])) {

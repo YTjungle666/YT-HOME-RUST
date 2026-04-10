@@ -9,7 +9,7 @@ import '@mdi/font/css/materialdesignicons.css'
 import 'vuetify/styles/main.css'
 
 import colors from 'vuetify/util/colors'
-import { fa, en, vi, zhHans, zhHant, ru } from 'vuetify/locale'
+import { zhHans } from 'vuetify/locale'
 
 // Composables
 import { createVuetify } from 'vuetify'
@@ -49,8 +49,8 @@ export default createVuetify({
     },
   },
   locale: {
-    locale: localStorage.getItem("locale") ?? 'en',
-    fallback: 'en',
-    messages: { en, fa, vi, zhHans, zhHant, ru },
+    locale: 'zhHans',
+    fallback: 'zhHans',
+    messages: { zhHans },
   },
 })

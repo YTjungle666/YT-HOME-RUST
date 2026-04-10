@@ -57,7 +57,7 @@
             <v-col>
               <template v-if="item.users">
                 <v-tooltip activator="parent" dir="ltr" location="bottom" v-if="item.users.length > 0">
-                  <span v-for="u in item.users">{{ u }}<br /></span>
+	                  <span v-for="u in item.users" :key="u">{{ u }}<br /></span>
                 </v-tooltip>
                 {{ item.users.length }}
               </template>
@@ -116,14 +116,9 @@
 import Data from '@/store/modules/data'
 import InboundVue from '@/layouts/modals/Inbound.vue'
 import Stats from '@/layouts/modals/Stats.vue'
-import { Config } from '@/types/config'
 import { computed, ref } from 'vue'
 import { ProxyHomeControlledInTypes, createInbound, Inbound } from '@/types/inbounds'
 import RandomUtil from '@/plugins/randomUtil'
-
-const appConfig = computed((): Config => {
-  return <Config> Data().config
-})
 
 const inbounds = computed((): Inbound[] => {
   return <Inbound[]> Data().inbounds
@@ -148,7 +143,7 @@ const modal = ref({
   id: 0,
 })
 
-let delOverlay = ref(new Array<boolean>)
+const delOverlay = ref(new Array<boolean>)
 
 const showModal = (id: number) => {
   modal.value.id = id
@@ -166,13 +161,13 @@ const delInbound = async (id: number) => {
   if (success) delOverlay.value[index] = false
 }
 
-let cloneLoading = ref(false)
+const cloneLoading = ref(false)
 
 const clone = async (id: number) => {
   cloneLoading.value = true
   const inboundArray = await Data().loadInbounds([id])
   const inbound = inboundArray[0]
-  let newTag = inbound.type + "-" + RandomUtil.randomSeq(3)
+  const newTag = inbound.type + "-" + RandomUtil.randomSeq(3)
   const newInbound = createInbound(inbound.type, { ...inbound,
     id: 0,
     tag: newTag,

@@ -291,7 +291,14 @@ const enableNtp = computed({
 
 const ntpInterval = computed({
   get():any { return appConfig.value.ntp?.interval? parseInt(appConfig.value.ntp?.interval.replace('m','')) : null },
-  set(v:number) { if (appConfig.value.ntp) v>0 ? appConfig.value.ntp.interval =  v + 'm' : delete appConfig.value.ntp.interval }
+  set(v:number) {
+    if (!appConfig.value.ntp) return
+    if (v > 0) {
+      appConfig.value.ntp.interval = v + 'm'
+    } else {
+      delete appConfig.value.ntp.interval
+    }
+  }
 })
 
 const enableCacheFile = computed({

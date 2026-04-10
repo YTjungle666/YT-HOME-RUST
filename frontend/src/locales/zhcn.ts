@@ -352,6 +352,8 @@ export default {
     addr: "地址",
     port: "端口",
     proxyHome: "代理回家",
+    serverAddr: "服务器地址",
+    serverAddrHint: "订阅输出使用的 IP 或域名，留空则自动使用当前访问地址",
     ssMethod: "方法",
     ssManageable: "可管理的",
     sSide: "服务器端",

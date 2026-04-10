@@ -104,8 +104,8 @@ export default {
         this.iTls.ech.key_path=undefined
         this.useEchPath = 1
         if (msg.obj.length>0){
-          let config = <string[]>[]
-          let key = <string[]>[]
+          const config = <string[]>[]
+          const key = <string[]>[]
           let isConfig = false
           let isKey = false
 

@@ -32,6 +32,11 @@ export default defineConfig({
     manifest: false,
     outDir: 'dist',
     chunkSizeWarningLimit: 2000,
+    rolldownOptions: {
+      checks: {
+        pluginTimings: false,
+      },
+    },
     rollupOptions: {
       output: {
         codeSplitting: false,

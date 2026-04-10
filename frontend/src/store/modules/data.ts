@@ -67,7 +67,7 @@ const Data = defineStore('Data', {
       return <Client>{}
     },
     async save (object: string, action: string, data: any, initUsers?: number[]): Promise<boolean> {
-      let postData = {
+      const postData = {
         object: object,
         action: action,
         data: JSON.stringify(data, null, 2),

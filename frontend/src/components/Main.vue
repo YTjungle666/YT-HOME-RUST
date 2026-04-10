@@ -26,12 +26,12 @@
                 </v-row>
               </v-card-title>
               <v-divider></v-divider>
-              <v-row v-for="items in menuItems" density="compact">
+              <v-row v-for="items in menuItems" :key="items.title" density="compact">
                 <v-col cols="12">
                   <v-card :subtitle="items.title" variant="flat">
                     <v-card-text>
                       <v-row density="compact">
-                        <v-col cols="12" md="6" lg="3" v-for="item in items.value">
+                        <v-col cols="12" md="6" lg="3" v-for="item in items.value" :key="item.value">
                           <v-switch
                           density="compact"
                           v-model="reloadItems"
@@ -120,8 +120,8 @@
                   </v-col>
                   <v-col cols="3">{{ $t('main.info.uptime') }}</v-col>
                   <v-col cols="9" v-tooltip:top="$t('main.info.startupTime')
-                    + ': ' + new Date((tilesData.sys?.bootTime || 0) * 1000).toLocaleString(locale)">
-                    {{ HumanReadable.formatSecond((Date.now()/1000) - tilesData.sys?.bootTime) }}
+                    + ': ' + systemStartupTimeText">
+                    {{ systemUptimeText }}
                   </v-col>
                 </v-row>
               </template>
@@ -151,28 +151,28 @@
                     </v-chip>
                   </v-col>
                   <v-col cols="4">{{ $t('main.info.uptime') }}</v-col>
-                  <v-col cols="8">{{ HumanReadable.formatSecond(tilesData.sbd?.stats?.Uptime) }}</v-col>
+                  <v-col cols="8">{{ coreUptimeText }}</v-col>
                   <v-col cols="4">{{ $t('online') }}</v-col>
                   <v-col cols="8">
                     <template v-if="tilesData.sbd?.running">
                       <v-chip density="compact" color="primary" variant="flat" v-if="Data().onlines.user">
                         <v-tooltip activator="parent" location="top" overflow="auto">
                           <span v-text="$t('pages.clients')" style="font-weight: bold;"></span><br/>
-                          <span v-for="user in Data().onlines.user">{{ user }}<br /></span>
+                          <span v-for="user in Data().onlines.user" :key="user">{{ user }}<br /></span>
                         </v-tooltip>
                         {{ Data().onlines.user?.length }}
                       </v-chip>
                       <v-chip density="compact" color="success" variant="flat" v-if="Data().onlines.inbound">
                         <v-tooltip activator="parent" location="top" :text="$t('pages.inbounds')">
                           <span v-text="$t('pages.inbounds')" style="font-weight: bold;"></span><br/>
-                          <span v-for="i in Data().onlines.inbound">{{ i }}<br /></span>
+                          <span v-for="i in Data().onlines.inbound" :key="i">{{ i }}<br /></span>
                         </v-tooltip>
                         {{ Data().onlines.inbound?.length }}
                       </v-chip>
                       <v-chip density="compact" color="info" variant="flat" v-if="Data().onlines.outbound">
                         <v-tooltip activator="parent" location="top" :text="$t('pages.outbounds')">
                           <span v-text="$t('pages.outbounds')" style="font-weight: bold;"></span><br/>
-                          <span v-for="o in Data().onlines.outbound">{{ o }}<br /></span>
+                          <span v-for="o in Data().onlines.outbound" :key="o">{{ o }}<br /></span>
                         </v-tooltip>
                         {{ Data().onlines.outbound?.length }}
                       </v-chip>
@@ -226,6 +226,8 @@ const menuItems = [
 ]
 
 const tilesData = ref(<any>{})
+const nowSeconds = ref(Math.floor(Date.now() / 1000))
+const coreStatusFetchedAt = ref(0)
 
 const reloadItems = computed({
   get() { return Data().reloadItems },
@@ -233,32 +235,80 @@ const reloadItems = computed({
     if (Data().reloadItems.length == 0 && v.length>0) startTimer()
     if (Data().reloadItems.length > 0 && v.length == 0) stopTimer()
     Data().reloadItems = v
-    v.length>0 ? localStorage.setItem("reloadItems",v.join(',')) : localStorage.removeItem("reloadItems")
+    if (v.length > 0) {
+      localStorage.setItem("reloadItems", v.join(','))
+    } else {
+      localStorage.removeItem("reloadItems")
+    }
   }
 })
 
+const mergeTilesData = (payload: any) => {
+  if (payload?.sbd?.stats?.Uptime !== undefined) {
+    coreStatusFetchedAt.value = nowSeconds.value
+  }
+  tilesData.value = {
+    ...tilesData.value,
+    ...payload,
+  }
+}
+
+const systemUptimeSeconds = computed(() => {
+  const bootTime = Number(tilesData.value?.sys?.bootTime ?? 0)
+  if (!bootTime) return 0
+  return Math.max(0, nowSeconds.value - bootTime)
+})
+
+const systemStartupTimeText = computed(() => {
+  const bootTime = Number(tilesData.value?.sys?.bootTime ?? 0)
+  if (!bootTime) return '-'
+  return new Date(bootTime * 1000).toLocaleString(locale)
+})
+
+const systemUptimeText = computed(() => HumanReadable.formatSecond(systemUptimeSeconds.value))
+
+const coreUptimeSeconds = computed(() => {
+  const base = Number(tilesData.value?.sbd?.stats?.Uptime ?? 0)
+  if (!tilesData.value?.sbd?.running || coreStatusFetchedAt.value === 0) {
+    return base
+  }
+  return base + Math.max(0, nowSeconds.value - coreStatusFetchedAt.value)
+})
+
+const coreUptimeText = computed(() => HumanReadable.formatSecond(coreUptimeSeconds.value))
+
 const reloadData = async () => {
-  const request = [...new Set(reloadItems.value.map(r => r.split('-')[1]))]
-  if (tilesData.value?.sys?.appVersion) request.filter(r => r != 'sys')
+  let request = [...new Set(reloadItems.value.map(r => r.split('-')[1]))]
+  if (tilesData.value?.sys?.appVersion) {
+    request = request.filter(r => r != 'sys')
+  }
+  if (request.length === 0) return
   const data = await HttpUtils.get('api/status',{ r: request.join(',')})
   if (data.success) {
-    tilesData.value = data.obj
+    mergeTilesData(data.obj)
   }
 }
 
 const reloadSys = async () => {
   const data = await HttpUtils.get('api/status',{ r: 'sys'})
   if (data.success) {
-    tilesData.value.sys = data.obj.sys
+    mergeTilesData(data.obj)
   }
 }
 
 let intervalId: ReturnType<typeof setInterval> | null = null
+let clockIntervalId: ReturnType<typeof setInterval> | null = null
 
 const startTimer = () => {
   intervalId = setInterval(() => {
     reloadData()
   }, 2000)
+}
+
+const startClock = () => {
+  clockIntervalId = setInterval(() => {
+    nowSeconds.value = Math.floor(Date.now() / 1000)
+  }, 1000)
 }
 
 const stopTimer = () => {
@@ -268,8 +318,16 @@ const stopTimer = () => {
   }
 }
 
+const stopClock = () => {
+  if (clockIntervalId) {
+    clearInterval(clockIntervalId)
+    clockIntervalId = null
+  }
+}
+
 onMounted(async () => {
   loading.value = true
+  startClock()
   if (Data().reloadItems.length != 0) {
     await reloadData()
     startTimer()
@@ -279,6 +337,7 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   stopTimer()
+  stopClock()
 })
 
 const logModal = ref({ visible: false })

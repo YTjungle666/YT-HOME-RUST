@@ -146,7 +146,7 @@ export default {
       this.loading = true
       const msg = await HttpUtils.get('api/keypairs', { k: "wireguard" })
       this.loading = false
-      let result = { private_key: "", public_key: "" }
+      const result = { private_key: "", public_key: "" }
       if (msg.success) {
         msg.obj.forEach((line:string) => {
           if (line.startsWith("PrivateKey")){

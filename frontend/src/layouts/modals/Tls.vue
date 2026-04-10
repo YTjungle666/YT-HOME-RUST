@@ -160,6 +160,7 @@
                 :label="$t('out.port')"
                 type="number"
                 min="0"
+                placeholder="443"
                 hide-details
                 v-model="server_port">
                 </v-text-field>
@@ -423,8 +424,8 @@ export default {
         this.inTls.certificate_path=undefined
         this.usePath = 1
         if (msg.obj.length>0){
-          let privateKey = <string[]>[]
-          let publicKey = <string[]>[]
+          const privateKey = <string[]>[]
+          const publicKey = <string[]>[]
           let isPrivateKey = false
           let isPublicKey = false
 
@@ -508,11 +509,22 @@ export default {
       set(v: boolean) { this.tls.client.insecure = v ? true : undefined }
     },
     server_port: {
-      get() { return this.inTls.reality?.handshake?.server_port ? this.inTls.reality.handshake.server_port : 443 },
-      set(v: any) {
-        if (this.inTls.reality){
-          this.inTls.reality.handshake.server_port = v.length == 0 || v == 0 ? 443 : parseInt(v)
+      get() { return this.inTls.reality?.handshake?.server_port ?? '' },
+      set(v: string | number | null) {
+        if (!this.inTls.reality) {
+          return
         }
+        const raw = typeof v === 'number' ? v : String(v ?? '').trim()
+        if (raw === '' || raw === 0 || raw === '0') {
+          delete this.inTls.reality.handshake.server_port
+          return
+        }
+        const parsed = typeof raw === 'number' ? raw : parseInt(raw, 10)
+        if (Number.isNaN(parsed) || parsed <= 0) {
+          delete this.inTls.reality.handshake.server_port
+          return
+        }
+        this.inTls.reality.handshake.server_port = parsed
       }
     },
     short_id: {

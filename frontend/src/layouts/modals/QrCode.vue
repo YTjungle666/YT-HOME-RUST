@@ -86,7 +86,7 @@
 	            </template>
 	          </v-window-item>
           <v-window-item value="link">
-            <v-row v-for="l in clientLinks">
+	            <v-row v-for="(l, index) in clientLinks" :key="`${l.type}-${l.uri || index}`">
               <v-col style="text-align: center;">
                 <v-chip>{{ l.remark?? $t('client.' + l.type) }}</v-chip><br />
                 <QrcodeVue :value="l.uri" :size="size" @click="copyToClipboard(l.uri)" :margin="1" style="border-radius: .5rem; cursor: copy;" />

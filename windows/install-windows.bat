@@ -30,8 +30,12 @@ if not exist "%INSTALL_DIR%\cert" mkdir "%INSTALL_DIR%\cert"
 REM Copy files
 echo Copying files...
 copy "sui.exe" "%INSTALL_DIR%\" >nul
+copy "sing-box.exe" "%INSTALL_DIR%\" >nul
+if exist "libcronet.dll" copy "libcronet.dll" "%INSTALL_DIR%\" >nul
 copy "s-ui-windows.xml" "%INSTALL_DIR%\" >nul
 copy "s-ui-windows.bat" "%INSTALL_DIR%\" >nul
+if exist "web" xcopy "web" "%INSTALL_DIR%\web\" /E /I /Y >nul
+if exist "migrations" xcopy "migrations" "%INSTALL_DIR%\migrations\" /E /I /Y >nul
 
 REM Check if WinSW is available
 set "WINSW_PATH=%INSTALL_DIR%\winsw.exe"
@@ -110,19 +114,21 @@ echo ========================================
 echo Admin Configuration
 echo ========================================
 
-set /p admin_username="Enter admin username (default: admin): "
-if "%admin_username%"=="" set "admin_username=admin"
+set /p admin_username="Enter admin username (leave blank to keep default admin): "
+set /p admin_password="Enter admin password (leave blank to keep default admin/admin): "
 
-set /p admin_password="Enter admin password: "
-if "%admin_password%"=="" (
-    echo Error: Password cannot be empty
-    pause
-    exit /b 1
+if not "%admin_username%"=="" (
+    echo Setting admin credentials...
+    sui.exe admin -username "%admin_username%" -password "%admin_password%"
+) else (
+    if not "%admin_password%"=="" (
+        echo Setting admin credentials...
+        sui.exe admin -password "%admin_password%"
+    ) else (
+        echo Keeping default admin credentials...
+        sui.exe admin -show
+    )
 )
-
-REM Set admin credentials
-echo Setting admin credentials...
-sui.exe admin -username "%admin_username%" -password "%admin_password%"
 
 REM Start service
 echo Starting YT HOME service...
@@ -173,7 +179,12 @@ echo   Panel Port: %panel_port%
 echo   Panel Path: %panel_path%
 echo   Subscription Port: %sub_port%
 echo   Subscription Path: %sub_path%
-echo   Admin Username: %admin_username%
+if "%admin_username%"=="" (
+    echo   Admin Username: admin
+    echo   Admin Password: admin
+) else (
+    echo   Admin Username: %admin_username%
+)
 echo.
 echo Access URLs:
 for /f "tokens=2 delims=:" %%i in ('ipconfig ^| findstr /i "IPv4"') do (

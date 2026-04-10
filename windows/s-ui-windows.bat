@@ -106,8 +106,17 @@ goto menu
 
 :open_panel
 echo Opening YT HOME panel in browser...
-start http://localhost:2095
-echo Panel opened in default browser.
+if exist "%INSTALL_DIR%\sui.exe" (
+    for /f "delims=" %%i in ('"%INSTALL_DIR%\sui.exe" uri 2^>nul') do (
+        start "" "%%i"
+        echo Panel opened: %%i
+        goto open_panel_done
+    )
+    echo Failed to resolve panel URI.
+) else (
+    echo YT HOME executable not found: %INSTALL_DIR%\sui.exe
+)
+:open_panel_done
 pause
 goto menu
 
@@ -212,16 +221,11 @@ echo ========================================
 echo Access URLs
 echo ========================================
 echo.
-echo Local access:
-echo   Panel: http://localhost:2095
-echo   Subscription: http://localhost:2096
-echo.
-echo Network access:
-for /f "tokens=2 delims=:" %%i in ('ipconfig ^| findstr /i "IPv4"') do (
-    set "ip=%%i"
-    set "ip=!ip: =!"
-    echo   Panel: http://!ip!:2095
-    echo   Subscription: http://!ip!:2096
+if exist "%INSTALL_DIR%\sui.exe" (
+    cd /d "%INSTALL_DIR%"
+    for /f "delims=" %%i in ('sui.exe uri 2^>nul') do echo   %%i
+) else (
+    echo YT HOME executable not found. Please run the installer first.
 )
 echo.
 pause

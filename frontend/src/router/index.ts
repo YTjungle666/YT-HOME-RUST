@@ -83,25 +83,39 @@ const router = createRouter({
   routes,
 })
 
-const DEFAULT_TITLE = 'YT HOME'
 let intervalId:any
 
-// Navigation guard to check authentication state
-router.beforeEach((to) => {
-  // Check the session cookie
-  const sessionCookie = document.cookie.split(';').find(cookie => cookie.trim().startsWith('s-ui='))
-  const isAuthenticated = !!sessionCookie
+const isAuthenticated = async () => {
+  try {
+    const response = await fetch('/api/session', {
+      credentials: 'same-origin',
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest',
+      },
+    })
 
-  // If the route requires authentication and the user is not authenticated, redirect to /login
-  if (to.meta.requiresAuth && !isAuthenticated) {
+    if (!response.ok) {
+      return false
+    }
+
+    const payload = await response.json()
+    return payload?.success === true
+  } catch {
+    return false
+  }
+}
+
+// Navigation guard to check authentication state
+router.beforeEach(async (to) => {
+  const authenticated = await isAuthenticated()
+
+  if (to.meta.requiresAuth && !authenticated) {
     return '/login'
   }
-  if (to.path === '/login' && isAuthenticated) {
-    // If already authenticated and visiting /login, redirect to '/'
+  if (to.path === '/login' && authenticated) {
     return '/'
   }
 
-  // Load default data
   if (to.path !== '/login') {
     loadDataInterval()
   } else {

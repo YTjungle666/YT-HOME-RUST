@@ -7,7 +7,7 @@
         <v-icon icon="mdi-plus" />
         </v-chip>
       </v-card-subtitle>
-      <v-row v-for="(header, index) in hdrs">
+      <v-row v-for="(header, index) in hdrs" :key="`${header.name}-${index}`">
         <v-col cols="12" sm="6" md="4">
           <v-text-field
             :label="$t('objects.key')"
@@ -48,17 +48,17 @@ export default {
       this.hdrs = [...this.hdrs, {name: "Host", value: ""}]
     },
     del_header(i:number) {
-      let h = this.hdrs
+      const h = this.hdrs
       h.splice(i,1)
       this.hdrs = h
     },
     update_key(i:number,k:string) {
-      let h = this.hdrs
+      const h = this.hdrs
       h[i].name = k
       this.hdrs = h
     },
     update_value(i:number,v:string) {
-      let h = this.hdrs
+      const h = this.hdrs
       h[i].value = v
       this.hdrs = h
     },
@@ -66,7 +66,7 @@ export default {
   computed: {
     hdrs: {
       get() :Header[] {
-        let headers: Header[] = []
+        const headers: Header[] = []
         const h = this.$props.data.headers
         if (h) {
           Object.keys(h).forEach(key => {
@@ -81,7 +81,7 @@ export default {
       },
       set(v:Header[]) {
         if (v.length>0) {
-          let headers:any = {}
+          const headers:any = {}
           v.forEach((h:Header) => {
             if (headers[h.name]) {
               if (Array.isArray(headers[h.name])) {

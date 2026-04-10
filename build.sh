@@ -1,15 +1,24 @@
 #!/bin/sh
 
+set -eu
+
 cd frontend
-npm i
+npm ci
+npm run lint -- --max-warnings=0
+npm run typecheck
 npm run build
 
 cd ..
 echo "Backend"
 
-mkdir -p web/html
-rm -fr web/html/*
-cp -R frontend/dist/* web/html/
+mkdir -p web
+rm -fr web/*
+cp -R frontend/dist/. web/
+mkdir -p migrations
+rm -fr migrations/*
+cp -R crates/infra-db/migrations/. migrations/
 
-BUILD_TAGS="with_quic,with_grpc,with_utls,with_acme,with_gvisor,with_naive_outbound,with_musl,badlinkname,tfogo_checklinkname0,with_tailscale"
-go build -ldflags '-w -s -checklinkname=0 -extldflags "-Wl,-no_warn_duplicate_libraries"' -tags "$BUILD_TAGS" -o sui main.go
+cargo build --release -p app
+sh ./scripts/fetch-sing-box.sh linux amd64 . "${SING_BOX_VERSION:-1.13.5}"
+cp target/release/app ./sui
+chmod +x ./sui ./sing-box

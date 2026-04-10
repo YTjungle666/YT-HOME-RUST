@@ -6,23 +6,6 @@
     <v-menu>
       <template v-slot:activator="{ props }">
         <v-btn icon v-bind="props">
-          <v-icon>mdi-translate</v-icon>
-        </v-btn>
-      </template>
-      <v-list>
-        <v-list-item
-          v-for="lang in languages"
-          :key="lang.value"
-          @click="changeLocale(lang.value)"
-          :active="isActiveLocale(lang.value)"
-        >
-          <v-list-item-title>{{ lang.title }}</v-list-item-title>
-        </v-list-item>
-      </v-list>
-    </v-menu>
-    <v-menu>
-      <template v-slot:activator="{ props }">
-        <v-btn icon v-bind="props">
           <v-icon>mdi-theme-light-dark</v-icon>
         </v-btn>
       </template>
@@ -42,25 +25,13 @@
 </template>
 
 <script lang="ts" setup>
-import { useLocale, useTheme } from 'vuetify'
+import { useTheme } from 'vuetify'
 import { useRoute } from 'vue-router'
-import { useI18n } from 'vue-i18n'
-import { languages } from '@/locales'
 
 defineProps(['isMobile'])
 
 const route = useRoute()
-const { locale: i18nLocale } = useI18n()
-const vuetifyLocale = useLocale()
 const theme = useTheme()
-
-const changeLocale = (l: string) => {
-  i18nLocale.value = l
-  vuetifyLocale.current.value = l
-  localStorage.setItem('locale', l)
-  window.location.reload()
-}
-const isActiveLocale = (l: string) => i18nLocale.value === l
 const themes = [
   { value: 'light', icon: 'mdi-white-balance-sunny' },
   { value: 'dark', icon: 'mdi-moon-waning-crescent' },

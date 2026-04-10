@@ -1,138 +1,64 @@
-# PowerShell script for building YT HOME on Windows
 param(
+    [ValidateSet("amd64", "arm64")]
     [string]$Architecture = "amd64",
-    [switch]$NoCGO,
-    [switch]$Help
+    [string]$SingBoxVersion = "1.13.5"
 )
 
-if ($Help) {
-    Write-Host "Usage: .\build-windows.ps1 [-Architecture <arch>] [-NoCGO] [-Help]"
-    Write-Host "Architectures: amd64, 386, arm64"
-    Write-Host "Examples:"
-    Write-Host "  .\build-windows.ps1                    # Build for amd64 with CGO"
-    Write-Host "  .\build-windows.ps1 -Architecture 386 # Build for 32-bit Windows"
-    Write-Host "  .\build-windows.ps1 -NoCGO            # Build without CGO"
-    exit 0
-}
+$ErrorActionPreference = "Stop"
 
-Write-Host "Building YT HOME for Windows ($Architecture)..." -ForegroundColor Green
+$RepoRoot = Split-Path $PSScriptRoot -Parent
+Set-Location $RepoRoot
 
-# Check if Go is installed
-try {
-    $goVersion = go version 2>$null
-    if ($LASTEXITCODE -ne 0) {
-        throw "Go not found"
-    }
-    Write-Host "Go version: $goVersion" -ForegroundColor Green
-} catch {
-    Write-Host "Error: Go is not installed or not in PATH" -ForegroundColor Red
-    Write-Host "Please install Go from https://golang.org/dl/" -ForegroundColor Yellow
-    Read-Host "Press Enter to exit"
-    exit 1
-}
+$TargetTriple = if ($Architecture -eq "arm64") { "aarch64-pc-windows-msvc" } else { "x86_64-pc-windows-msvc" }
+$AssetArch = if ($Architecture -eq "arm64") { "arm64" } else { "amd64" }
+$OutputDir = Join-Path $PSScriptRoot "dist\$Architecture"
+$WebDir = Join-Path $OutputDir "web"
+$MigrationsDir = Join-Path $OutputDir "migrations"
 
-# Check if Node.js is installed
-try {
-    $nodeVersion = node --version 2>$null
-    if ($LASTEXITCODE -ne 0) {
-        throw "Node.js not found"
-    }
-    Write-Host "Node.js version: $nodeVersion" -ForegroundColor Green
-} catch {
-    Write-Host "Error: Node.js is not installed or not in PATH" -ForegroundColor Red
-    Write-Host "Please install Node.js from https://nodejs.org/" -ForegroundColor Yellow
-    Read-Host "Press Enter to exit"
-    exit 1
-}
+Write-Host "Building YT HOME RUST for Windows ($Architecture)..." -ForegroundColor Green
 
-# Build frontend
-Write-Host "Building frontend..." -ForegroundColor Yellow
+rustup target add $TargetTriple | Out-Null
+
 Push-Location frontend
-
-try {
-    Write-Host "Installing dependencies..." -ForegroundColor Cyan
-    npm install
-    if ($LASTEXITCODE -ne 0) {
-        throw "Failed to install frontend dependencies"
-    }
-
-    Write-Host "Building frontend..." -ForegroundColor Cyan
-    npm run build
-    if ($LASTEXITCODE -ne 0) {
-        throw "Failed to build frontend"
-    }
-} catch {
-    Write-Host "Error: $_" -ForegroundColor Red
-    Pop-Location
-    Read-Host "Press Enter to exit"
-    exit 1
-}
-
+npm ci
+npm run build
 Pop-Location
 
-# Create web/html directory
-Write-Host "Creating web/html directory..." -ForegroundColor Yellow
-if (!(Test-Path "web\html")) {
-    New-Item -ItemType Directory -Path "web\html" -Force | Out-Null
+cargo build --release -p app --target $TargetTriple
+
+if (Test-Path $OutputDir) {
+    Remove-Item $OutputDir -Recurse -Force
+}
+New-Item -ItemType Directory -Path $WebDir -Force | Out-Null
+New-Item -ItemType Directory -Path $MigrationsDir -Force | Out-Null
+
+Copy-Item "target\$TargetTriple\release\app.exe" (Join-Path $OutputDir "sui.exe")
+Copy-Item "frontend\dist\*" $WebDir -Recurse -Force
+Copy-Item "crates\infra-db\migrations\*" $MigrationsDir -Recurse -Force
+
+$ZipPath = Join-Path $env:TEMP "sing-box-$SingBoxVersion-windows-$AssetArch.zip"
+$ExtractRoot = Join-Path $env:TEMP "sing-box-$SingBoxVersion-windows-$AssetArch"
+$ExtractDir = Join-Path $ExtractRoot "sing-box-$SingBoxVersion-windows-$AssetArch"
+$DownloadUrl = "https://github.com/SagerNet/sing-box/releases/download/v$SingBoxVersion/sing-box-$SingBoxVersion-windows-$AssetArch.zip"
+
+if (Test-Path $ZipPath) {
+    Remove-Item $ZipPath -Force
+}
+if (Test-Path $ExtractRoot) {
+    Remove-Item $ExtractRoot -Recurse -Force
 }
 
-# Copy frontend build files
-Write-Host "Copying frontend build files..." -ForegroundColor Yellow
-Copy-Item "frontend\dist\*" "web\html\" -Recurse -Force
+Invoke-WebRequest -Uri $DownloadUrl -OutFile $ZipPath
+Expand-Archive -Path $ZipPath -DestinationPath $ExtractRoot -Force
 
-# Build backend
-Write-Host "Building backend..." -ForegroundColor Yellow
-
-# Set environment variables
-$env:GOOS = "windows"
-$env:GOARCH = $Architecture
-
-if ($NoCGO) {
-    $env:CGO_ENABLED = "0"
-    Write-Host "Building without CGO..." -ForegroundColor Yellow
-} else {
-    $env:CGO_ENABLED = "1"
-    Write-Host "Building with CGO..." -ForegroundColor Yellow
+Copy-Item (Join-Path $ExtractDir "sing-box.exe") (Join-Path $OutputDir "sing-box.exe")
+if (Test-Path (Join-Path $ExtractDir "libcronet.dll")) {
+    Copy-Item (Join-Path $ExtractDir "libcronet.dll") (Join-Path $OutputDir "libcronet.dll")
 }
 
-# Build command
-$buildCmd = "go build -ldflags `"-w -s`" -tags `"with_quic,with_grpc,with_utls,with_acme,with_gvisor,with_tailscale`" -o sui.exe main.go"
+Copy-Item (Join-Path $PSScriptRoot "install-windows.bat") $OutputDir
+Copy-Item (Join-Path $PSScriptRoot "s-ui-windows.bat") $OutputDir
+Copy-Item (Join-Path $PSScriptRoot "s-ui-windows.xml") $OutputDir
+Copy-Item (Join-Path $PSScriptRoot "uninstall-windows.bat") $OutputDir
 
-try {
-    Invoke-Expression $buildCmd
-    if ($LASTEXITCODE -ne 0) {
-        if (!$NoCGO) {
-            Write-Host "CGO build failed, trying without CGO..." -ForegroundColor Yellow
-            $env:CGO_ENABLED = "0"
-            Invoke-Expression $buildCmd
-            if ($LASTEXITCODE -ne 0) {
-                throw "Failed to build backend even without CGO"
-            }
-            Write-Host "Built without CGO (some features may be limited)" -ForegroundColor Yellow
-        } else {
-            throw "Failed to build backend"
-        }
-    } else {
-        if ($env:CGO_ENABLED -eq "1") {
-            Write-Host "Built successfully with CGO" -ForegroundColor Green
-        } else {
-            Write-Host "Built successfully without CGO" -ForegroundColor Green
-        }
-    }
-} catch {
-    Write-Host "Error: $_" -ForegroundColor Red
-    Read-Host "Press Enter to exit"
-    exit 1
-}
-
-Write-Host "Build completed successfully!" -ForegroundColor Green
-Write-Host "Output: sui.exe" -ForegroundColor Green
-
-# Show file info
-if (Test-Path "sui.exe") {
-    $fileInfo = Get-Item "sui.exe"
-    Write-Host "File size: $([math]::Round($fileInfo.Length / 1MB, 2)) MB" -ForegroundColor Cyan
-    Write-Host "Created: $($fileInfo.CreationTime)" -ForegroundColor Cyan
-}
-
-Read-Host "Press Enter to exit"
+Write-Host "Windows bundle is ready at $OutputDir" -ForegroundColor Green

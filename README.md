@@ -1,129 +1,151 @@
-# YT HOME
+# YT HOME RUST
 
-**A self-hosted home access control plane built on sing-box**
+![Release](https://img.shields.io/github/v/release/YTjungle666/YT-HOME-RUST?display_name=tag)
+![CI](https://img.shields.io/github/actions/workflow/status/YTjungle666/YT-HOME-RUST/ci.yml?branch=main&label=ci)
+![Docker](https://img.shields.io/github/actions/workflow/status/YTjungle666/YT-HOME-RUST/docker.yml?branch=main&label=docker)
+![License](https://img.shields.io/github/license/YTjungle666/YT-HOME-RUST)
 
-![Release](https://img.shields.io/github/v/release/YTjungle666/YT-HOME?display_name=tag)
-![CI](https://img.shields.io/github/actions/workflow/status/YTjungle666/YT-HOME/ci.yml?branch=main&label=ci)
-![License](https://img.shields.io/badge/license-GPL%20v3-blue.svg)
+`YT HOME RUST` 是一个面向家庭网络回家场景的 `sing-box` 控制面板。  
+它提供统一的入站、客户端、订阅、二维码、TLS/Reality 和状态管理界面，适合部署在 `PVE`、`NAS`、小主机或家庭服务器上，集中管理你的回家入口。
 
-YT HOME is a private deployment panel for people who want one thing done well: publish a secure public entry to their home network, distribute client subscriptions cleanly, and keep internal services reachable without turning the project into a pile of routing fragments and manual configs.
+## 你会得到什么
 
-It is designed for home labs and private infrastructure: `PVE`, `NAS`, `router`, `IPMI`, `Home Assistant`, internal dashboards, file services, and any LAN-only web service you want to reach from the outside through a controlled proxy path.
+- 把家庭网络回家入口集中管理，不再手工拼配置
+- 用一个面板管理节点、客户端、订阅和 Reality 参数
+- 让手机、平板、电脑通过二维码或订阅快速导入
+- 区分普通公网节点和“代理回家”节点
+- 默认收紧访问边界，未开启“代理回家”的入站不能访问服务器内网
 
-## Why YT HOME
+## 核心能力
 
-- **Home-first design**: optimized for public access back into your own LAN, not just generic node management.
-- **Single-node proxy-home mode**: enable return-home access only on the node you choose, without breaking your normal multi-node subscriptions.
-- **Reality-ready delivery**: works with modern `VLESS + Reality` style deployments and clean client-side imports.
-- **Operational visibility**: panel, clients, inbounds, subscriptions and runtime status stay in one place.
-- **Self-hosted release model**: this repository ships binary releases and CI validation, without publishing Docker images by default.
+- Rust 后端，模块化重构
+- 保留原有界面风格和核心交互
+- 只保留简体中文界面资源
+- 支持 `VLESS / VMess / Trojan / Hysteria / TUIC / Reality` 等常见场景
+- 订阅、二维码、导入链接可直接给主流客户端使用
+- GitHub 自动生成 `CI`、`Release` 和 `Docker` 镜像
 
-## Product Highlights
+## 默认信息
 
-- Multi-protocol inbound management based on `sing-box`
-- Client and subscription management
-- JSON / Clash subscription output
-- Dedicated “proxy home” node behavior for return-home access
-- Reality-compatible TLS configuration
-- Runtime logs, traffic, client stats and system status
-- Linux and Windows release packaging through GitHub Actions
+- 面板地址：`http://<你的地址>/`
+- 订阅地址：`http://<你的地址>:2096/sub/`
+- 默认账号：`admin`
+- 默认密码：`admin`
 
-## Typical Workflow
+## 部署方式 1：一键安装脚本
 
-1. Deploy YT HOME inside your home network.
-2. Expose the required inbound ports through your router.
-3. Publish a `VLESS + Reality` node with your public domain.
-4. Turn on **Proxy Home** only for the inbound that should act as your return-home entry.
-5. Import that node’s single-inbound subscription into your client.
-6. Reach private services through the server-side LAN path.
+和原项目一样，保留一键安装方式。
 
-## Default Access
-
-- Panel port: `80`
-- Panel path: `/`
-- Subscription port: `2096`
-- Subscription path: `/sub/`
-- Default admin: `admin`
-
-Example:
-
-- Panel: `http://your-host/`
-- Subscription base: `http://your-host:2096/sub/`
-
-## Install
-
-### Linux / macOS
+直接安装最新版：
 
 ```bash
-bash <(curl -Ls https://raw.githubusercontent.com/YTjungle666/YT-HOME/main/install.sh)
+bash <(curl -Ls https://raw.githubusercontent.com/YTjungle666/YT-HOME-RUST/main/install.sh)
 ```
 
-### Manual Release Install
-
-1. Open [GitHub Releases](https://github.com/YTjungle666/YT-HOME/releases/latest)
-2. Download the archive matching your architecture
-3. Extract it to `/usr/local/s-ui`
-4. Enable the service:
+安装指定版本：
 
 ```bash
-systemctl daemon-reload
-systemctl enable s-ui --now
+bash <(curl -Ls https://raw.githubusercontent.com/YTjungle666/YT-HOME-RUST/main/install.sh) v2.0.0
 ```
 
-### Local Docker Compose Build
+安装完成后访问：
 
-This repository keeps Docker support for self-build use, but does **not** publish Docker images as part of release delivery.
+- 面板：`http://你的服务器IP或域名/`
+- 订阅：`http://你的服务器IP或域名:2096/sub/`
+
+## 部署方式 2：Docker / GHCR 镜像
+
+镜像发布到：
+
+```text
+ghcr.io/ytjungle666/yt-home-rust
+```
+
+### 直接运行
 
 ```bash
-git clone https://github.com/YTjungle666/YT-HOME
-cd YT-HOME
-docker compose up -d --build
+docker run -d \
+  --name yt-home-rust \
+  --restart unless-stopped \
+  -p 80:80 \
+  -p 2096:2096 \
+  -v $(pwd)/db:/app/db \
+  ghcr.io/ytjungle666/yt-home-rust:latest
 ```
 
-## Release and CI
-
-- `ci.yml` builds the frontend, runs Go tests, and verifies the backend can compile.
-- `release.yml` packages Linux release archives.
-- `windows.yml` packages Windows release archives.
-- No Docker image publishing workflow is included.
-
-## Repository Layout
-
-- `frontend/`: Vue 3 + Vuetify frontend source
-- `service/`: application service layer
-- `sub/`: subscription generation logic
-- `web/`: embedded frontend assets for backend serving
-- `.github/workflows/`: CI and release automation
-
-## Development
-
-### Build Frontend
+### 使用 Compose
 
 ```bash
-cd frontend
-npm ci
-npm run build
-cd ..
-mkdir -p web/html
-rm -rf web/html/*
-cp -R frontend/dist/. web/html/
+mkdir -p yt-home-rust && cd yt-home-rust
+curl -LO https://raw.githubusercontent.com/YTjungle666/YT-HOME-RUST/main/docker-compose.yml
+docker compose up -d
 ```
 
-### Build Backend
+这个镜像针对部署做了最小化收敛，既能直接当 Docker 镜像运行，也能导出成 `PVE CT` 根文件系统使用。
+
+## 部署方式 3：PVE CT 模板
+
+如果你习惯在 `PVE LXC/CT` 里运行服务，可以直接用 Docker 镜像导出 rootfs，然后创建 CT。
+
+### 1. 拉取镜像
 
 ```bash
-go test ./service/... ./sub/... ./util/...
-go build ./...
+docker pull ghcr.io/ytjungle666/yt-home-rust:latest
 ```
 
-### Run Locally
+### 2. 导出 rootfs
 
 ```bash
-SUI_DB_FOLDER=db SUI_DEBUG=true ./sui
+cid=$(docker create ghcr.io/ytjungle666/yt-home-rust:latest)
+docker export "$cid" | gzip > yt-home-rust-ct-rootfs.tar.gz
+docker rm "$cid"
 ```
 
-## Notes
+### 3. 上传到 PVE 宿主机
 
-- Deploy responsibly and only on infrastructure you control.
-- If you operate behind residential NAT, make sure your router forwarding and public domain resolution are already correct before troubleshooting protocol behavior.
-- If you use `Reality`, prefer a domain you control as the handshake target instead of depending on unrelated third-party sites.
+把 `yt-home-rust-ct-rootfs.tar.gz` 放到 PVE 宿主机，例如：
+
+```bash
+/var/lib/vz/template/cache/yt-home-rust-ct-rootfs.tar.gz
+```
+
+### 4. 创建 CT
+
+```bash
+pct create 210 local:vztmpl/yt-home-rust-ct-rootfs.tar.gz \
+  --hostname yt-home-rust \
+  --cores 2 \
+  --memory 1024 \
+  --rootfs local-lvm:8 \
+  --net0 name=eth0,bridge=vmbr0,ip=dhcp
+```
+
+### 5. 启动 CT
+
+```bash
+pct start 210
+```
+
+镜像内已经内置 `CT init` 启动脚本，CT 启动后会自动拉起 `YT HOME RUST`。
+
+## 发布产物
+
+- Linux：`s-ui-linux-amd64.tar.gz`、`s-ui-linux-arm64.tar.gz`
+- Windows：`s-ui-windows-amd64.zip`、`s-ui-windows-arm64.zip`
+- Docker：`ghcr.io/ytjungle666/yt-home-rust`
+- Release 页面：<https://github.com/YTjungle666/YT-HOME-RUST/releases>
+
+## 使用建议
+
+- 面板部署在内网服务器，公网只放必要端口
+- 只把确实需要“回家访问”的入站开启“代理回家”
+- Reality 节点建议使用你自己可控的域名
+- 首次登录后，按自己的环境修改面板端口、订阅地址和域名
+
+## 许可证
+
+`GPL-3.0-only`
+
+## 其他
+
+如果你想看开发和贡献说明，请看 [CONTRIBUTING.md](./CONTRIBUTING.md)。

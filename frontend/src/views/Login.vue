@@ -72,14 +72,6 @@
               </v-form>
 
               <div class="auth-footer">
-                <v-select
-                  density="comfortable"
-                  hide-details
-                  variant="outlined"
-                  :items="languages"
-                  v-model="$i18n.locale"
-                  @update:modelValue="changeLocale"
-                />
                 <v-menu>
                   <template v-slot:activator="{ props }">
                     <v-btn icon variant="outlined" v-bind="props">
@@ -109,14 +101,13 @@
 
 <script lang="ts" setup>
 import { ref } from "vue"
-import { useLocale,useTheme } from 'vuetify'
-import { i18n, languages } from '@/locales'
+import { useTheme } from 'vuetify'
+import { i18n } from '@/locales'
 import { useRouter } from 'vue-router'
 import HttpUtil from '@/plugins/httputil'
 
 
 const theme = useTheme()
-const locale = useLocale()
 
 const themes = [
   { value: 'light', icon: 'mdi-white-balance-sunny' },
@@ -184,10 +175,6 @@ const login = async () => {
     loading.value=false
   }
 }
-const changeLocale = (l: any) => {
-  locale.current.value = l ?? 'en'
-  localStorage.setItem('locale', locale.current.value)
-}
 const changeTheme = (th: string) => {
   theme.change(th)
   localStorage.setItem('theme', th)
@@ -200,12 +187,41 @@ const isActiveTheme = (th: string) => {
 
 <style scoped>
 .login-shell {
+  --login-text-main: rgb(var(--v-theme-on-surface));
+  --login-text-soft: rgb(var(--v-theme-on-surface) / 0.72);
+  --login-surface: rgb(var(--v-theme-surface));
+  --login-surface-soft: rgb(var(--v-theme-surface) / 0.7);
+  --login-border: rgb(var(--v-theme-on-surface) / 0.14);
+  --login-brand-a: rgb(var(--v-theme-primary) / 0.3);
+  --login-brand-b: rgb(var(--v-theme-primary) / 0.15);
+  --login-kicker-bg: rgb(var(--v-theme-primary) / 0.18);
+  --login-kicker-text: rgb(var(--v-theme-primary));
+  --login-panel-shadow: 0 24px 50px rgb(8 18 30 / 0.14);
+  --login-shell-bg:
+    radial-gradient(circle at 10% 10%, var(--login-brand-a), transparent 38%),
+    radial-gradient(circle at 100% 100%, var(--login-brand-b), transparent 34%),
+    linear-gradient(140deg, rgb(var(--v-theme-background)) 0%, rgb(var(--v-theme-surface)) 100%);
+
   min-height: 100vh;
   padding: 24px;
-  background:
-    radial-gradient(circle at top left, rgba(25, 146, 169, 0.18), transparent 30%),
-    radial-gradient(circle at bottom right, rgba(244, 162, 97, 0.18), transparent 28%),
-    linear-gradient(135deg, #0f1720 0%, #13283a 52%, #1f3c43 100%);
+  background: var(--login-shell-bg);
+}
+
+:global(.v-theme--dark) .login-shell {
+  --login-text-main: rgb(var(--v-theme-on-surface));
+  --login-text-soft: rgb(var(--v-theme-on-surface) / 0.76);
+  --login-surface: rgb(var(--v-theme-surface) / 0.85);
+  --login-surface-soft: rgb(var(--v-theme-surface) / 0.62);
+  --login-border: rgb(var(--v-theme-on-surface) / 0.18);
+  --login-brand-a: rgb(var(--v-theme-primary) / 0.24);
+  --login-brand-b: rgb(15 138 173 / 0.18);
+  --login-kicker-bg: rgb(var(--v-theme-primary) / 0.24);
+  --login-kicker-text: rgb(226 242 255);
+  --login-panel-shadow: 0 30px 60px rgb(0 0 0 / 0.42);
+  --login-shell-bg:
+    radial-gradient(circle at 8% 12%, var(--login-brand-a), transparent 34%),
+    radial-gradient(circle at 92% 88%, var(--login-brand-b), transparent 28%),
+    linear-gradient(135deg, rgb(7 11 18) 0%, rgb(14 24 37) 55%, rgb(16 34 46) 100%);
 }
 
 .login-grid {
@@ -218,11 +234,11 @@ const isActiveTheme = (th: string) => {
 .brand-panel {
   padding: 40px;
   border-radius: 28px;
-  color: #f7fafc;
-  background: linear-gradient(160deg, rgba(8, 15, 28, 0.76), rgba(18, 46, 61, 0.58));
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 28px 60px rgba(0, 0, 0, 0.25);
-  backdrop-filter: blur(18px);
+  color: var(--login-text-main);
+  background: linear-gradient(155deg, var(--login-surface), var(--login-surface-soft));
+  border: 1px solid var(--login-border);
+  box-shadow: var(--login-panel-shadow);
+  backdrop-filter: blur(16px);
 }
 
 .brand-kicker,
@@ -238,8 +254,8 @@ const isActiveTheme = (th: string) => {
 }
 
 .brand-kicker {
-  color: #08131f;
-  background: linear-gradient(90deg, #ffd166, #f4a261);
+  color: var(--login-kicker-text);
+  background: var(--login-kicker-bg);
 }
 
 .brand-title {
@@ -253,7 +269,7 @@ const isActiveTheme = (th: string) => {
 .brand-body {
   max-width: 60ch;
   margin: 0;
-  color: rgba(247, 250, 252, 0.82);
+  color: var(--login-text-soft);
   font-size: 1rem;
   line-height: 1.7;
 }
@@ -267,8 +283,8 @@ const isActiveTheme = (th: string) => {
 
 .stat-card,
 .feature-card {
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--login-border);
+  background: rgb(var(--v-theme-background) / 0.2);
   border-radius: 22px;
 }
 
@@ -285,7 +301,7 @@ const isActiveTheme = (th: string) => {
 }
 
 .stat-label {
-  color: rgba(247, 250, 252, 0.68);
+  color: var(--login-text-soft);
   font-size: 0.92rem;
   line-height: 1.5;
 }
@@ -310,7 +326,7 @@ const isActiveTheme = (th: string) => {
 
 .feature-card p {
   margin: 0;
-  color: rgba(247, 250, 252, 0.7);
+  color: var(--login-text-soft);
   line-height: 1.6;
 }
 
@@ -320,8 +336,8 @@ const isActiveTheme = (th: string) => {
   width: 44px;
   height: 44px;
   border-radius: 14px;
-  color: #08131f;
-  background: linear-gradient(135deg, #7bdff2, #ffd166);
+  color: rgb(var(--v-theme-on-primary));
+  background: linear-gradient(135deg, rgb(var(--v-theme-primary)), rgb(var(--v-theme-primary) / 0.72));
 }
 
 .workflow-list {
@@ -334,9 +350,10 @@ const isActiveTheme = (th: string) => {
 .workflow-pill {
   padding: 10px 14px;
   border-radius: 999px;
-  color: #f7fafc;
+  color: var(--login-text-main);
   font-size: 0.9rem;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgb(var(--v-theme-background) / 0.28);
+  border: 1px solid var(--login-border);
 }
 
 .auth-panel {
@@ -347,8 +364,10 @@ const isActiveTheme = (th: string) => {
   width: 100%;
   padding: 30px;
   align-self: center;
-  background: rgba(255, 252, 245, 0.96);
-  box-shadow: 0 28px 60px rgba(0, 0, 0, 0.2);
+  color: var(--login-text-main);
+  background: rgb(var(--v-theme-surface) / 0.94);
+  border: 1px solid var(--login-border);
+  box-shadow: var(--login-panel-shadow);
 }
 
 .auth-header h2 {
@@ -360,13 +379,13 @@ const isActiveTheme = (th: string) => {
 
 .auth-header p {
   margin: 0 0 24px;
-  color: rgba(32, 43, 58, 0.72);
+  color: var(--login-text-soft);
   line-height: 1.6;
 }
 
 .auth-kicker {
-  color: #165a72;
-  background: rgba(123, 223, 242, 0.18);
+  color: var(--login-kicker-text);
+  background: var(--login-kicker-bg);
 }
 
 .auth-footer {

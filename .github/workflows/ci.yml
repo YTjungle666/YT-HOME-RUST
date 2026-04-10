@@ -4,42 +4,85 @@ on:
   push:
     branches:
       - main
+    tags:
+      - "v*"
   pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   validate:
     runs-on: ubuntu-latest
     env:
-      NODE_VERSION: "25"
+      NODE_VERSION: "24"
+      RUST_TOOLCHAIN: "1.88.0"
+      SING_BOX_VERSION: "1.13.5"
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6.0.2
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v6.3.0
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
           cache-dependency-path: frontend/package-lock.json
 
-      - name: Build frontend
-        run: |
-          cd frontend
-          npm ci
-          npm run build
-          cd ..
-          mkdir -p web/html
-          rm -rf web/html/*
-          cp -R frontend/dist/. web/html/
-
-      - name: Setup Go
-        uses: actions/setup-go@v6
+      - name: Setup Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1.9.0
         with:
-          cache: false
-          go-version-file: go.mod
+          toolchain: ${{ env.RUST_TOOLCHAIN }}
+          components: rustfmt, clippy
 
-      - name: Run unit tests
-        run: go test ./service/... ./sub/... ./util/...
+      - name: Install cargo-audit and cargo-deny
+        run: |
+          cargo install cargo-audit --locked
+          cargo install cargo-deny --locked
 
-      - name: Build backend
-        run: go build ./...
+      - name: Frontend quality gate
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run lint -- --max-warnings=0
+          npm run typecheck
+          npm run build
+          npm audit --audit-level=high
+
+      - name: Rust quality gate
+        run: |
+          cargo fmt --all --check
+          cargo clippy --workspace --all-targets --all-features -- -D warnings
+          cargo test --workspace --all-features
+          cargo build --release -p app
+          cargo audit
+          cargo deny check
+
+      - name: Runtime smoke test
+        run: |
+          sh ./scripts/fetch-sing-box.sh linux amd64 "$RUNNER_TEMP/sing-box" "$SING_BOX_VERSION"
+          SUI_SING_BOX_BIN="$RUNNER_TEMP/sing-box/sing-box" \
+          SUI_WEB_DIR="$GITHUB_WORKSPACE/frontend/dist" \
+          SUI_DB_FOLDER="$RUNNER_TEMP/sui-db" \
+          SUI_WEB_PORT=18080 \
+          SUI_SUB_PORT=18080 \
+          ./target/release/app >"$RUNNER_TEMP/sui.log" 2>&1 &
+          APP_PID=$!
+          trap 'kill $APP_PID' EXIT
+          for _ in $(seq 1 20); do
+            if curl -fsS http://127.0.0.1:18080/health >/dev/null; then
+              break
+            fi
+            sleep 1
+          done
+          curl -fsS http://127.0.0.1:18080/health
+          curl -fsS -c "$RUNNER_TEMP/cookies.txt" -X POST -d 'user=admin&pass=admin' http://127.0.0.1:18080/api/login
+          curl -fsS -b "$RUNNER_TEMP/cookies.txt" 'http://127.0.0.1:18080/api/status?r=sbd'
+          curl -fsS -b "$RUNNER_TEMP/cookies.txt" 'http://127.0.0.1:18080/api/checkOutbound?tag=direct'
+
+      - name: Docker build smoke test
+        run: docker build --build-arg SING_BOX_VERSION="${SING_BOX_VERSION}" -t yt-home-rust-ci .

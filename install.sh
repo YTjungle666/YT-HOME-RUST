@@ -4,9 +4,10 @@ red='\033[0;31m'
 green='\033[0;32m'
 yellow='\033[0;33m'
 plain='\033[0m'
-repo="YTjungle666/YT-HOME"
+repo="YTjungle666/YT-HOME-RUST"
 
 cur_dir=$(pwd)
+fresh_install=0
 
 # check root
 [[ $EUID -ne 0 ]] && echo -e "${red}Fatal error: ${plain} Please run this script with root privilege \n " && exit 1
@@ -101,16 +102,12 @@ config_after_install() {
         fi
     else
         echo -e "${red}cancel...${plain}"
-        if [[ ! -f "/usr/local/s-ui/db/s-ui.db" ]]; then
-            local usernameTemp=$(head -c 6 /dev/urandom | base64)
-            local passwordTemp=$(head -c 6 /dev/urandom | base64)
-            echo -e "this is a fresh installation,will generate random login info for security concerns:"
+        if [[ "${fresh_install:-0}" -eq 1 ]]; then
+            echo -e "this is a fresh installation, keeping the default login info:"
             echo -e "###############################################"
-            echo -e "${green}username:${usernameTemp}${plain}"
-            echo -e "${green}password:${passwordTemp}${plain}"
+            /usr/local/s-ui/sui admin -show
             echo -e "###############################################"
             echo -e "${red}if you forgot your login info,you can type ${green}s-ui${red} for configuration menu${plain}"
-            /usr/local/s-ui/sui admin -username ${usernameTemp} -password ${passwordTemp}
         else
             echo -e "${red} this is your upgrade,will keep old settings,if you forgot your login info,you can type ${green}s-ui${red} for configuration menu${plain}"
         fi
@@ -159,13 +156,20 @@ install_s-ui() {
     fi
 
     if [[ -e /usr/local/s-ui/ ]]; then
+        if [[ -f /usr/local/s-ui/db/s-ui.db ]]; then
+            fresh_install=0
+        else
+            fresh_install=1
+        fi
         systemctl stop s-ui
+    else
+        fresh_install=1
     fi
 
     tar zxvf s-ui-linux-$(arch).tar.gz
     rm s-ui-linux-$(arch).tar.gz -f
 
-    chmod +x s-ui/sui s-ui/s-ui.sh
+    chmod +x s-ui/sui s-ui/s-ui.sh s-ui/sing-box
     cp s-ui/s-ui.sh /usr/bin/s-ui
     cp -rf s-ui /usr/local/
     cp -f s-ui/*.service /etc/systemd/system/

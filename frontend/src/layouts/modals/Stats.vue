@@ -16,7 +16,7 @@
           {{ $t('objects.' + resource) + " : " + tag }}
         </div>
         <v-radio-group v-model="limit" @change="loadData" density="compact" :loading="loading" inline hide-details>
-          <v-radio v-for="p in periods" :label="p.title" :value="p.value"></v-radio>
+          <v-radio v-for="p in periods" :key="p.value" :label="p.title" :value="p.value"></v-radio>
         </v-radio-group>
           <v-container id="container" style="height:40vh;">
             <v-skeleton-loader
@@ -27,7 +27,7 @@
           ></v-skeleton-loader>
           <template v-else>
             <v-alert :text="$t('noData')" type="warning" variant="outlined" v-if="alert"></v-alert>
-            <Line v-if="loaded" :data="usage" :options="<any>options" />
+            <LineChart v-if="loaded" :data="usage" :options="<any>options" />
           </template>
         </v-container>
       </v-card-text>
@@ -51,7 +51,7 @@ import {
   Filler,
 } from 'chart.js'
 import { ref } from 'vue'
-import { Line } from 'vue-chartjs'
+import { Line as LineChart } from 'vue-chartjs'
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -65,7 +65,7 @@ ChartJS.register(
 ChartJS.defaults.font.family = 'Vazirmatn'
 export default {
   components: {
-    Line
+    LineChart
   },
   props: ['visible','resource','tag'],
   data() {
@@ -117,7 +117,7 @@ export default {
             },
             beginAtZero: true,
             ticks: {
-              callback: function(label:any, index: number) {
+              callback: function(label:any) {
                 return label == 0 ? 0 : HumanReadable.sizeFormat(label,0)
               },
               count: 10
@@ -134,7 +134,7 @@ export default {
       const data = await HttpUtils.get('api/stats', { resource: this.resource, tag: this.tag, limit: this.limit })
       if (data.success && data.obj) {
         const obj = <any[]>data.obj
-        const l = String(i18n.global.locale) == 'fa' ? "fa-IR" : "en-US"
+        const l = 'zh-CN'
         const oneStep = this.limit * 3600 * 1000 / 360 // Each 10 sec
         const now = new Date().getTime()
         const steps = <number[]>[]
@@ -146,12 +146,10 @@ export default {
         const downlinkData = <number[]>[]
         for (let i = 1; i<360; i++) {
           labels.push(this.genLable(steps[i],l))
-          let upSum:number
-          let downSum:number
           const upTraffics = obj.filter(o => o.direction && o.dateTime*1000 < steps[i] && o.dateTime*1000 > steps[i-1]).map((o:any) => o.traffic)
-          upSum = upTraffics.length>0 ? upTraffics.reduce(u => u) : null
+          const upSum = upTraffics.length>0 ? upTraffics.reduce(u => u) : null
           const downTraffics = obj.filter(o => !o.direction && o.dateTime*1000 < steps[i] && o.dateTime*1000 > steps[i-1]).map((o:any) => o.traffic)
-          downSum = downTraffics.length>0 ? downTraffics.reduce(d => d) : null
+          const downSum = downTraffics.length>0 ? downTraffics.reduce(d => d) : null
           uplinkData.push(upSum)
           downlinkData.push(downSum)
         }

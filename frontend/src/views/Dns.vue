@@ -289,8 +289,8 @@ const ruleSets = computed((): string[] => {
   return appConfig.value?.route?.rule_set?.map((r:any) => r.tag) ?? []
 })
 
-let delDnsOverlay = ref(new Array<boolean>)
-let delDnsRuleOverlay = ref(new Array<boolean>)
+const delDnsOverlay = ref(new Array<boolean>)
+const delDnsRuleOverlay = ref(new Array<boolean>)
 
 const dnsModal = ref({
   visible: false,

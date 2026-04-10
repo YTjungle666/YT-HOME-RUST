@@ -344,7 +344,13 @@ export default {
   computed: {
     enableLog: {
       get() :boolean { return this.subJsonExt?.log != undefined },
-      set(v:boolean) { v ? this.subJsonExt.log = this.defaultLog : delete this.subJsonExt.log }
+      set(v:boolean) {
+        if (v) {
+          this.subJsonExt.log = this.defaultLog
+        } else {
+          delete this.subJsonExt.log
+        }
+      }
     },
     enableDns: {
       get() :boolean { return this.subJsonExt?.dns != undefined },
@@ -363,17 +369,29 @@ export default {
     },
     enableInb: {
       get() :boolean { return this.subJsonExt?.inbounds != undefined },
-      set(v:boolean) { v ? this.subJsonExt.inbounds = this.defaultInb.slice() : delete this.subJsonExt.inbounds }
+      set(v:boolean) {
+        if (v) {
+          this.subJsonExt.inbounds = this.defaultInb.slice()
+        } else {
+          delete this.subJsonExt.inbounds
+        }
+      }
     },
     enableExp: {
       get() :boolean { return this.subJsonExt?.experimental != undefined },
-      set(v:boolean) { v ? this.subJsonExt.experimental = this.defaultExp : delete this.subJsonExt.experimental }
+      set(v:boolean) {
+        if (v) {
+          this.subJsonExt.experimental = this.defaultExp
+        } else {
+          delete this.subJsonExt.experimental
+        }
+      }
     },
     dns():any { return this.subJsonExt?.dns?? undefined },
     proxyDns: {
       get() :any { return this.dns?.servers?.findLast((d:any) => d.tag == "proxy-dns")?? {} },
       set(v:any) {
-        let sIndex = this.dns.servers.findIndex((d:any) => d.tag == "proxy-dns")
+        const sIndex = this.dns.servers.findIndex((d:any) => d.tag == "proxy-dns")
         if (sIndex === -1 || sIndex == undefined) {
           this.dns.servers.push({ ...this.defaultDns.servers[0], ...v })
         } else {
@@ -472,7 +490,7 @@ export default {
       }
     },
     updateRuleSets(){
-      let tags = <string[]>[]
+      const tags = <string[]>[]
       if (this.dns?.rules?.length>0) this.dns.rules.forEach((r:any) => { if (r.rule_set) tags.push(...r.rule_set) })
       if (this.rules?.length>0) this.rules.forEach((r:any) => { if (r.rule_set) tags.push(...r.rule_set) })
       if (tags.length>0){
@@ -488,7 +506,7 @@ export default {
     saveEditor(data:string) {
       try {
         this.subJsonExt = JSON.parse(data)
-      } catch (e) {
+      } catch {
         push.error({
           message: i18n.global.t('failed') + ": " + i18n.global.t('error.invalidData'),
           duration: 5000,

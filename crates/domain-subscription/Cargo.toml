@@ -1,0 +1,23 @@
+[package]
+name = "domain-subscription"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+base64.workspace = true
+infra-db = { path = "../infra-db" }
+percent-encoding.workspace = true
+reqwest.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+serde_yaml.workspace = true
+shared = { path = "../shared" }
+sqlx.workspace = true
+time.workspace = true
+tracing.workspace = true
+url.workspace = true
+
+[lints]
+workspace = true

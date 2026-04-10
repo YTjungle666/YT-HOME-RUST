@@ -40,6 +40,18 @@
           <v-window v-model="side" style="margin-top: 10px;">
             <v-window-item value="s">
               <Listen :data="inbound" :inTags="inTags" v-if="inbound.type != inTypes.Tun" />
+              <v-card v-if="HasInData.includes(inbound.type)">
+                <v-card-text>
+                  <v-text-field
+                    v-model="subscriptionServer"
+                    :label="$t('in.serverAddr')"
+                    :hint="$t('in.serverAddrHint')"
+                    persistent-hint
+                    clearable
+                    @click:clear="delete inbound.subscribe_server"
+                  />
+                </v-card-text>
+              </v-card>
               <v-card v-if="showLanAccessSwitch">
                 <v-card-text>
                   <v-switch
@@ -74,7 +86,7 @@
                   <v-card-subtitle>{{ $t('in.multiDomain') }}
                     <v-chip color="primary" density="compact" variant="elevated" @click="add_addr"><v-icon icon="mdi-plus" /></v-chip>
                   </v-card-subtitle>
-                  <template v-for="addr,index in inbound.addrs">
+                  <template v-for="(addr, index) in inbound.addrs" :key="`${addr.server ?? 'addr'}-${index}`">
                     {{ $t('in.addr') }} #{{ (index+1) }} <v-icon icon="mdi-delete" color="error" @click="inbound.addrs?.splice(index,1)" />
                     <v-divider></v-divider>
                     <AddrVue :addr="addr" :hasTls="HasTls.includes(inbound.type)" />
@@ -286,6 +298,15 @@ export default {
       if (this.inbound.type == InTypes.ShadowTLS && (<ShadowTLS>this.inbound).version < 3 ) return false
       if ((<any>this.inbound).managed) return false
       return true
+    },
+    subscriptionServer: {
+      get(): string {
+        return this.inbound.subscribe_server?.trim() ?? ''
+      },
+      set(value: string) {
+        const normalized = value.trim()
+        this.inbound.subscribe_server = normalized.length > 0 ? normalized : undefined
+      }
     },
     showLanAccessSwitch() {
       return this.ProxyHomeTypes.includes(this.inbound.type)

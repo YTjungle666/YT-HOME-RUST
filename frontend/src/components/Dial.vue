@@ -162,23 +162,53 @@ export default {
     },
     optionDetour: {
       get(): boolean { return this.$props.dial.detour != undefined },
-      set(v:boolean) { v ? this.$props.dial.detour = this.outTags[0]?? '' : delete this.$props.dial.detour }
+      set(v:boolean) {
+        if (v) {
+          this.$props.dial.detour = this.outTags[0] ?? ''
+        } else {
+          delete this.$props.dial.detour
+        }
+      }
     },
     optionBind: {
       get(): boolean { return this.$props.dial.bind_interface != undefined },
-      set(v:boolean) { v ? this.$props.dial.bind_interface = '' : delete this.$props.dial.bind_interface }
+      set(v:boolean) {
+        if (v) {
+          this.$props.dial.bind_interface = ''
+        } else {
+          delete this.$props.dial.bind_interface
+        }
+      }
     },
     optionIPV4: {
       get(): boolean { return this.$props.dial.inet4_bind_address != undefined },
-      set(v:boolean) { v ? this.$props.dial.inet4_bind_address = '' : delete this.$props.dial.inet4_bind_address }
+      set(v:boolean) {
+        if (v) {
+          this.$props.dial.inet4_bind_address = ''
+        } else {
+          delete this.$props.dial.inet4_bind_address
+        }
+      }
     },
     optionIPV6: {
       get(): boolean { return this.$props.dial.inet6_bind_address != undefined },
-      set(v:boolean) { v ? this.$props.dial.inet6_bind_address = '' : delete this.$props.dial.inet6_bind_address }
+      set(v:boolean) {
+        if (v) {
+          this.$props.dial.inet6_bind_address = ''
+        } else {
+          delete this.$props.dial.inet6_bind_address
+        }
+      }
     },
     optionBindNoPort: {
       get(): boolean { return this.$props.dial.bind_address_no_port != undefined },
-      set(v:boolean) { v ? this.$props.dial.bind_address_no_port = true : delete this.$props.dial.bind_address_no_port }
+      set(v:boolean) {
+        if (v) {
+          this.$props.dial.bind_address_no_port = true
+        } else {
+          delete this.$props.dial.bind_address_no_port
+        }
+      }
     },
     optionTcpKeepAlive: {
       get(): boolean {
@@ -199,11 +229,23 @@ export default {
     },
     optionRM: {
       get(): boolean { return this.$props.dial.routing_mark != undefined },
-      set(v:boolean) { v ? this.$props.dial.routing_mark = 0 : delete this.$props.dial.routing_mark }
+      set(v:boolean) {
+        if (v) {
+          this.$props.dial.routing_mark = 0
+        } else {
+          delete this.$props.dial.routing_mark
+        }
+      }
     },
     optionRA: {
       get(): boolean { return this.$props.dial.reuse_addr != undefined },
-      set(v:boolean) { v ? this.$props.dial.reuse_addr = true : delete this.$props.dial.reuse_addr }
+      set(v:boolean) {
+        if (v) {
+          this.$props.dial.reuse_addr = true
+        } else {
+          delete this.$props.dial.reuse_addr
+        }
+      }
     },
     optionTCP: {
       get(): boolean {
@@ -222,11 +264,23 @@ export default {
     },
     optionUDP: {
       get(): boolean { return this.$props.dial.udp_fragment != undefined },
-      set(v:boolean) { v ? this.$props.dial.udp_fragment = true : delete this.$props.dial.udp_fragment }
+      set(v:boolean) {
+        if (v) {
+          this.$props.dial.udp_fragment = true
+        } else {
+          delete this.$props.dial.udp_fragment
+        }
+      }
     },
     optionCT: {
       get(): boolean { return this.$props.dial.connect_timeout != undefined },
-      set(v:boolean) { v ? this.$props.dial.connect_timeout = '5s' : delete this.$props.dial.connect_timeout }
+      set(v:boolean) {
+        if (v) {
+          this.$props.dial.connect_timeout = '5s'
+        } else {
+          delete this.$props.dial.connect_timeout
+        }
+      }
     },
     optionDR: {
       get(): boolean { return this.$props.dial.domain_resolver != undefined },

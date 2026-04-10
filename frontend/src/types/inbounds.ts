@@ -52,6 +52,7 @@ interface InboundBasics extends Listen {
   type: InType
   tag: string
   proxy_home?: boolean
+  subscribe_server?: string
   tls_id: number
   addrs?: Addr[]
   out_json?: any

@@ -46,7 +46,7 @@
             <v-card-subtitle>Predefined
               <v-chip color="primary" density="compact" variant="elevated" @click="addHostsPredefined"><v-icon icon="mdi-plus" /></v-chip>
             </v-card-subtitle>
-            <v-row v-for="(pd, index) in hostsPredefined">
+            <v-row v-for="(pd, index) in hostsPredefined" :key="`${pd.name}-${index}`">
               <v-col cols="12" sm="6" md="4">
                 <v-text-field v-model="pd.name" :label="$t('setting.domain')" @input="update_pds_key(index,$event.target.value)" hide-details></v-text-field>
               </v-col>
@@ -148,17 +148,17 @@ export default {
       this.hostsPredefined = [...this.hostsPredefined, newPredefined]
     },
     delHostsPredefined(i:number) {
-      let pds = this.hostsPredefined
+      const pds = this.hostsPredefined
       pds.splice(i,1)
       this.hostsPredefined = pds
     },
     update_pds_key(i:number,k:string) {
-      let pds = this.hostsPredefined
+      const pds = this.hostsPredefined
       pds[i].name = k
       this.hostsPredefined = pds
     },
     update_pds_value(i:number,v:string) {
-      let pds = this.hostsPredefined
+      const pds = this.hostsPredefined
       pds[i].value = v
       this.hostsPredefined = pds
     },
@@ -172,7 +172,7 @@ export default {
     },
     hostsPredefined: {
       get() :any[] {
-        let pds :any[] = []
+        const pds :any[] = []
         const h = this.dnsServer.predefined
         if (h) {
           Object.keys(h).forEach(key => {
@@ -187,7 +187,7 @@ export default {
        },
       set(v: any[]) {
         if (v.length>0) {
-          let pds:any = {}
+          const pds:any = {}
           v.forEach((pd:any) => {
             pds[pd.name] = pd.value.split(',').map((item: string) => item.trim())
           })

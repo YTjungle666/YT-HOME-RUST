@@ -1,10 +1,10 @@
 <template>
-  <Line v-if="loaded" :data="data" :options="<any>options" />
+  <LineChart v-if="loaded" :data="data" :options="<any>options" />
 </template>
 
 <script lang="ts">
 import { ref } from 'vue'
-import { Line } from 'vue-chartjs'
+import { Line as LineChart } from 'vue-chartjs'
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -26,7 +26,7 @@ ChartJS.register(
 ChartJS.defaults.font.family = 'Vazirmatn'
 export default {
   components: {
-    Line
+    LineChart
   },
   props: ['tilesData','type'],
   data() {
@@ -90,7 +90,7 @@ export default {
             },
             beginAtZero: true,
             ticks: {
-              callback: (label:any, index: number) => { return parseInt(label).toString() },
+              callback: (label:any) => { return parseInt(label).toString() },
               count: 10
             }
           }
@@ -103,17 +103,17 @@ export default {
     options() {
       switch (this.$props.type){
         case "h-net":
-          this.optionsNet.scales.y.ticks.callback = (label:any, index: number) => {
+          this.optionsNet.scales.y.ticks.callback = (label:any) => {
             return label == 0 ? "0" : HumanReadable.sizeFormat(label,0)
           }
           return this.optionsNet
         case "hp-net":
-          this.optionsNet.scales.y.ticks.callback = (label:any, index: number) => {
+          this.optionsNet.scales.y.ticks.callback = (label:any) => {
             return label == 0 ? "0" : HumanReadable.packetFormat(label,0)
           }
           return this.optionsNet
         case "h-dio":
-          this.optionsNet.scales.y.ticks.callback = (label:any, index: number) => {
+          this.optionsNet.scales.y.ticks.callback = (label:any) => {
             return label == 0 ? "0" : HumanReadable.sizeFormat(label,0)
           }
           return this.optionsNet

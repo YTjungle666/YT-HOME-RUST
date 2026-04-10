@@ -59,7 +59,7 @@ export interface ech {
 
 interface realityHanshake extends Dial {
   server: string
-  server_port: number
+  server_port?: number
 }
 
 export interface reality {

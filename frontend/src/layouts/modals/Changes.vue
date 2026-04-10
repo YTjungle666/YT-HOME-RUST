@@ -119,15 +119,7 @@ export default {
   },
   computed: {
     locale() {
-      const l = i18n.global.locale.value
-      switch (l) {
-        case "zhHans":
-          return "zh-cn"
-        case "zhHant":
-          return "zh-tw"
-        default:
-          return l
-      }
+      return 'zh-cn'
     },
   },
   watch: {

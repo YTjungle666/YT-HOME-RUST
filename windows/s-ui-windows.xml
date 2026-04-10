@@ -11,7 +11,9 @@
   <log keep="10" />
   <workingdirectory>%BASE%</workingdirectory>
   <env name="SUI_DB_FOLDER" value="db" />
-  <env name="SUI_DEBUG" value="false" />
+  <env name="SUI_WEB_DIR" value="web" />
+  <env name="SUI_MIGRATIONS_DIR" value="migrations" />
+  <env name="SUI_SING_BOX_BIN" value="sing-box.exe" />
   <onfailure action="restart" delay="10 sec" />
   <onfailure action="restart" delay="20 sec" />
   <onfailure action="none" />

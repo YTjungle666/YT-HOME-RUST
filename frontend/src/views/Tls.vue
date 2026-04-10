@@ -24,7 +24,7 @@
             <v-col>
               <template v-if="tlsInbounds(item.id).length>0">
                 <v-tooltip activator="parent" dir="ltr" location="bottom">
-                  <span v-for="i in tlsInbounds(item.id)">{{ i }}<br /></span>
+	                  <span v-for="i in tlsInbounds(item.id)" :key="i">{{ i }}<br /></span>
                 </v-tooltip>
                 {{ tlsInbounds(item.id).length }}
               </template>
@@ -117,7 +117,7 @@ const showModal = (id: number) => {
   modal.value.visible = true
 }
 const clone = (obj: any) => {
-  let data = JSON.parse(JSON.stringify(obj))
+  const data = JSON.parse(JSON.stringify(obj))
   data.id = 0
   while (tlsConfigs.value.findIndex(t => t.name == data.name) != -1){
     data.name += "-copy"

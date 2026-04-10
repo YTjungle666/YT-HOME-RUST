@@ -1,0 +1,21 @@
+[package]
+name = "domain-stats"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+domain-core = { path = "../domain-core" }
+if-addrs.workspace = true
+infra-db = { path = "../infra-db" }
+serde_json.workspace = true
+shared = { path = "../shared" }
+sqlx.workspace = true
+sysinfo.workspace = true
+time.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+
+[lints]
+workspace = true

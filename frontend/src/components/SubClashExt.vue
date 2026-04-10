@@ -147,7 +147,7 @@ export default {
       try {
         const result = yaml.parse(data)
         if (typeof result != 'object' || Array.isArray(result)) throw new Error()
-      } catch (e) {
+      } catch {
         push.error({
           message: i18n.global.t('failed') + ": " + i18n.global.t('error.invalidData'),
           duration: 5000,
@@ -158,7 +158,7 @@ export default {
       this.enableEditor = false
     },
     updateMetaJson(data:any, key:string) {
-      let newMetaJson = this.metaJson
+      const newMetaJson = this.metaJson
       if (data==null) {
         delete newMetaJson[key]
       } else {
@@ -172,7 +172,7 @@ export default {
       get() {
         try {
           return yaml.parse(this.settings.subClashExt)??{}
-        } catch (e) {
+        } catch {
           return {}
         }
       },
@@ -237,7 +237,7 @@ export default {
     rules: {
       get() { return this.metaJson.rules.length > 0 ? this.metaJson.rules.filter((r:string) => r != "MATCH,Proxy") : [] },
       set(v:string[]) {
-        let newRules = <string[]>[]
+        const newRules = <string[]>[]
         v.forEach((r:string) => { newRules.push(r) })
         this.updateMetaJson([ ...newRules, "MATCH,Proxy" ], 'rules')
       }

@@ -1,9 +1,5 @@
 import { i18n } from "@/locales"
 
-type OBJ = {
-  [key: string]: any
-}
-
 export const FindDiff = {
   deepCompare(obj1: any, obj2: any): boolean {
     // Check if the types of both objects are the same
@@ -83,16 +79,17 @@ export const HumanReadable = {
     }
   },
   formatSecond(second:number): string {
-    if (!second || second<0) return "-"
-    if (second < 60) {
-        return second.toFixed(0) + i18n.global.t('date.s')
-    } else if (second < 3600) {
-        return (second / 60).toFixed(0) + i18n.global.t('date.m')
-    } else if (second < 3600 * 24) {
-        return (second / 3600).toFixed(0) + i18n.global.t('date.h')
+    if (!Number.isFinite(second) || second < 0) return "-"
+    const wholeSeconds = Math.floor(second)
+    if (wholeSeconds < 60) {
+        return wholeSeconds.toFixed(0) + i18n.global.t('date.s')
+    } else if (wholeSeconds < 3600) {
+        return Math.floor(wholeSeconds / 60) + i18n.global.t('date.m')
+    } else if (wholeSeconds < 3600 * 24) {
+        return Math.floor(wholeSeconds / 3600) + i18n.global.t('date.h')
     }
-    const day = Math.floor(second / 3600 / 24)
-    const remain = Math.floor((second/3600) - (day*24))
+    const day = Math.floor(wholeSeconds / 3600 / 24)
+    const remain = Math.floor((wholeSeconds / 3600) - (day * 24))
     return day + i18n.global.t('date.d') + (remain > 0 ? ' ' + remain + i18n.global.t('date.h') : '')
   },
   remainedDays(exp:number): string {

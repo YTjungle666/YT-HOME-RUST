@@ -190,7 +190,13 @@ onBeforeMount(async () => {
 
 const routeMark = computed({
   get() { return route.value.default_mark ?? 0 },
-  set(v:number) { v>0 ? route.value.default_mark = v : delete appConfig.value.route.default_mark }
+  set(v:number) {
+    if (v > 0) {
+      route.value.default_mark = v
+    } else {
+      delete appConfig.value.route.default_mark
+    }
+  }
 })
 
 const stateChange = computed(() => FindDiff.deepCompare(appConfig.value, oldConfig.value))
@@ -233,8 +239,8 @@ const inboundTags = computed((): string[] => [
   ...Data().endpoints?.filter((e:any) => e.listen_port > 0).map((e:any) => e.tag)
 ])
 
-let delRuleOverlay = ref(new Array<boolean>)
-let delRulesetOverlay = ref(new Array<boolean>)
+const delRuleOverlay = ref(new Array<boolean>)
+const delRulesetOverlay = ref(new Array<boolean>)
 
 const ruleModal = ref({ visible: false, index: -1, data: "" })
 const showRuleModal = (index: number) => {

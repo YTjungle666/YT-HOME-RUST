@@ -1,0 +1,16 @@
+[package]
+name = "infra-scheduler"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+domain-config = { path = "../domain-config" }
+domain-core = { path = "../domain-core" }
+domain-stats = { path = "../domain-stats" }
+tokio.workspace = true
+tracing.workspace = true
+
+[lints]
+workspace = true
