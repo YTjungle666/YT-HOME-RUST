@@ -34,7 +34,7 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
 
       - name: Setup Rust
-        uses: actions-rust-lang/setup-rust-toolchain@v1.9.0
+        uses: actions-rust-lang/setup-rust-toolchain@v1.15.4
         with:
           toolchain: ${{ env.RUST_TOOLCHAIN }}
           components: rustfmt, clippy
