@@ -42,10 +42,18 @@ is_openrc() {
     command -v rc-service >/dev/null 2>&1
 }
 
+ensure_openrc_runtime() {
+    mkdir -p /run/openrc
+    if [[ ! -f /run/openrc/softlevel ]]; then
+        : > /run/openrc/softlevel
+    fi
+}
+
 stop_service_if_exists() {
     if is_systemd; then
         systemctl stop s-ui >/dev/null 2>&1 || true
     elif is_openrc; then
+        ensure_openrc_runtime
         rc-service s-ui stop >/dev/null 2>&1 || true
     fi
 }
@@ -66,6 +74,7 @@ enable_and_start_service() {
     if is_systemd; then
         systemctl enable s-ui --now
     elif is_openrc; then
+        ensure_openrc_runtime
         rc-update add s-ui default >/dev/null 2>&1 || true
         rc-service s-ui restart >/dev/null 2>&1 || rc-service s-ui start
     else

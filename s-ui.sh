@@ -45,6 +45,13 @@ service_manager() {
 
 SERVICE_MANAGER=$(service_manager)
 
+ensure_openrc_runtime() {
+    mkdir -p /run/openrc
+    if [[ ! -f /run/openrc/softlevel ]]; then
+        : > /run/openrc/softlevel
+    fi
+}
+
 service_exists() {
     case "${SERVICE_MANAGER}" in
         systemd)
@@ -62,7 +69,10 @@ service_exists() {
 service_start_cmd() {
     case "${SERVICE_MANAGER}" in
         systemd) systemctl start "$1" ;;
-        openrc) rc-service "$1" start ;;
+        openrc)
+            ensure_openrc_runtime
+            rc-service "$1" start
+            ;;
         *) return 1 ;;
     esac
 }
@@ -70,7 +80,10 @@ service_start_cmd() {
 service_stop_cmd() {
     case "${SERVICE_MANAGER}" in
         systemd) systemctl stop "$1" ;;
-        openrc) rc-service "$1" stop ;;
+        openrc)
+            ensure_openrc_runtime
+            rc-service "$1" stop
+            ;;
         *) return 1 ;;
     esac
 }
@@ -78,7 +91,10 @@ service_stop_cmd() {
 service_restart_cmd() {
     case "${SERVICE_MANAGER}" in
         systemd) systemctl restart "$1" ;;
-        openrc) rc-service "$1" restart ;;
+        openrc)
+            ensure_openrc_runtime
+            rc-service "$1" restart
+            ;;
         *) return 1 ;;
     esac
 }
@@ -86,7 +102,10 @@ service_restart_cmd() {
 service_status_cmd() {
     case "${SERVICE_MANAGER}" in
         systemd) systemctl status "$1" -l ;;
-        openrc) rc-service "$1" status ;;
+        openrc)
+            ensure_openrc_runtime
+            rc-service "$1" status
+            ;;
         *) return 1 ;;
     esac
 }
@@ -94,7 +113,10 @@ service_status_cmd() {
 service_enable_cmd() {
     case "${SERVICE_MANAGER}" in
         systemd) systemctl enable "$1" ;;
-        openrc) rc-update add "$1" default ;;
+        openrc)
+            ensure_openrc_runtime
+            rc-update add "$1" default
+            ;;
         *) return 1 ;;
     esac
 }
@@ -102,7 +124,10 @@ service_enable_cmd() {
 service_disable_cmd() {
     case "${SERVICE_MANAGER}" in
         systemd) systemctl disable "$1" ;;
-        openrc) rc-update del "$1" default ;;
+        openrc)
+            ensure_openrc_runtime
+            rc-update del "$1" default
+            ;;
         *) return 1 ;;
     esac
 }
@@ -110,7 +135,10 @@ service_disable_cmd() {
 service_is_active() {
     case "${SERVICE_MANAGER}" in
         systemd) systemctl is-active --quiet "$1" ;;
-        openrc) rc-service "$1" status >/dev/null 2>&1 ;;
+        openrc)
+            ensure_openrc_runtime
+            rc-service "$1" status >/dev/null 2>&1
+            ;;
         *) return 1 ;;
     esac
 }
