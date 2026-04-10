@@ -24,14 +24,14 @@ RUN rustup target add x86_64-unknown-linux-musl \
       cp /app/target/x86_64-unknown-linux-musl/release/app /app/sui; \
     fi
 
-FROM alpine:3.22 AS singbox-fetcher
+FROM alpine:3.23 AS singbox-fetcher
 ARG SING_BOX_VERSION=1.13.5
 WORKDIR /fetch
 RUN apk add --no-cache ca-certificates wget tar
 COPY scripts/fetch-sing-box.sh /usr/local/bin/fetch-sing-box
 RUN sh /usr/local/bin/fetch-sing-box linux amd64 /opt/sing-box "${SING_BOX_VERSION}"
 
-FROM alpine:3.22
+FROM alpine:3.23
 LABEL org.opencontainers.image.title="YT HOME RUST"
 LABEL org.opencontainers.image.description="Rust control plane for sing-box based home access."
 LABEL org.opencontainers.image.source="https://github.com/YTjungle666/YT-HOME-RUST"
