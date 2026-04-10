@@ -6,24 +6,34 @@
 ![License](https://img.shields.io/github/license/YTjungle666/YT-HOME-RUST)
 
 `YT HOME RUST` 是一个面向家庭网络回家场景的 `sing-box` 控制面板。  
-它提供统一的入站、客户端、订阅、二维码、TLS/Reality 和状态管理界面，适合部署在 `PVE`、`NAS`、小主机或家庭服务器上，集中管理你的回家入口。
+它把入站、客户端、二维码、订阅、TLS / Reality、运行状态和访问边界统一到一个中文面板里，适合部署在 `PVE`、`NAS`、小主机或家庭服务器上。
+
+## 这是什么
+
+如果你希望：
+
+- 用一个面板统一管理回家节点，而不是手工拼配置
+- 给手机、平板、电脑稳定下发二维码和订阅
+- 区分“普通公网访问”和“代理回家访问”
+- 在不改动习惯的前提下，把节点管理做得更稳、更清晰
+
+那么 `YT HOME RUST` 就是这个产品。
 
 ## 你会得到什么
 
-- 把家庭网络回家入口集中管理，不再手工拼配置
-- 用一个面板管理节点、客户端、订阅和 Reality 参数
-- 让手机、平板、电脑通过二维码或订阅快速导入
-- 区分普通公网节点和“代理回家”节点
-- 默认收紧访问边界，未开启“代理回家”的入站不能访问服务器内网
+- 统一的中文管理界面
+- 常见协议与 Reality 场景的集中配置能力
+- 可直接导入客户端的二维码、链接与订阅
+- 更明确的入站边界控制
+- 默认账号即可启动，部署完成后就能进入面板
 
-## 核心能力
+## 适合部署在哪里
 
-- Rust 后端，模块化重构
-- 保留原有界面风格和核心交互
-- 只保留简体中文界面资源
-- 支持 `VLESS / VMess / Trojan / Hysteria / TUIC / Reality` 等常见场景
-- 订阅、二维码、导入链接可直接给主流客户端使用
-- GitHub 自动生成 `CI`、`Release` 和 `Docker` 镜像
+- 家庭宽带回家机
+- `PVE` 或 `LXC/CT`
+- `NAS`
+- 云服务器
+- 低功耗小主机
 
 ## 默认信息
 
@@ -31,10 +41,11 @@
 - 订阅地址：`http://<你的地址>:2096/sub/`
 - 默认账号：`admin`
 - 默认密码：`admin`
+- 支持架构：`amd64`、`arm64`
 
 ## 部署方式 1：一键安装脚本
 
-和原项目一样，保留一键安装方式。
+适合已经有 Linux 主机，希望几分钟内装好就开始用。
 
 直接安装最新版：
 
@@ -54,6 +65,8 @@ bash <(curl -Ls https://raw.githubusercontent.com/YTjungle666/YT-HOME-RUST/main/
 - 订阅：`http://你的服务器IP或域名:2096/sub/`
 
 ## 部署方式 2：Docker / GHCR 镜像
+
+适合已经使用 Docker 或 Compose 管理服务的环境。
 
 镜像发布到：
 
@@ -81,11 +94,13 @@ curl -LO https://raw.githubusercontent.com/YTjungle666/YT-HOME-RUST/main/docker-
 docker compose up -d
 ```
 
-这个镜像针对部署做了最小化收敛，既能直接当 Docker 镜像运行，也能导出成 `PVE CT` 根文件系统使用。
+这个镜像已经按部署场景做了最小化收敛，既能直接作为 Docker 镜像运行，也能导出成 `PVE CT` 根文件系统。
 
 ## 部署方式 3：PVE CT 模板
 
-如果你习惯在 `PVE LXC/CT` 里运行服务，可以直接用 Docker 镜像导出 rootfs，然后创建 CT。
+适合已经习惯用 `PVE LXC/CT` 跑服务的环境。
+
+可以直接把 Docker 镜像导出为 rootfs，再创建 CT。
 
 ### 1. 拉取镜像
 
@@ -145,7 +160,3 @@ pct start 210
 ## 许可证
 
 `GPL-3.0-only`
-
-## 其他
-
-如果你想看开发和贡献说明，请看 [CONTRIBUTING.md](./CONTRIBUTING.md)。
