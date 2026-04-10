@@ -5,7 +5,7 @@ RUN npm ci --ignore-scripts
 COPY frontend/ ./
 RUN npm run build
 
-FROM rust:1.88.0-bookworm AS backend-builder
+FROM rust:1.94.1-bookworm AS backend-builder
 WORKDIR /app
 RUN apt-get update \
     && apt-get install -y --no-install-recommends musl-tools ca-certificates \
