@@ -18,13 +18,27 @@ $MigrationsDir = Join-Path $OutputDir "migrations"
 Write-Host "Building YT HOME RUST for Windows ($Architecture)..." -ForegroundColor Green
 
 rustup target add $TargetTriple | Out-Null
+if ($LASTEXITCODE -ne 0) {
+    throw "rustup target add failed"
+}
 
 Push-Location frontend
 npm ci
+if ($LASTEXITCODE -ne 0) {
+    Pop-Location
+    throw "npm ci failed"
+}
 npm run build
+if ($LASTEXITCODE -ne 0) {
+    Pop-Location
+    throw "npm run build failed"
+}
 Pop-Location
 
 cargo build --release -p app --target $TargetTriple
+if ($LASTEXITCODE -ne 0) {
+    throw "cargo build failed"
+}
 
 if (Test-Path $OutputDir) {
     Remove-Item $OutputDir -Recurse -Force
