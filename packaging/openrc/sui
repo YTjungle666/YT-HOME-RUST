@@ -1,0 +1,23 @@
+#!/sbin/openrc-run
+
+APP_DIR="/app"
+if [ -x /usr/local/s-ui/sui ]; then
+    APP_DIR="/usr/local/s-ui"
+fi
+
+name="YT HOME RUST"
+description="YT HOME RUST control plane"
+command="${APP_DIR}/sui"
+command_background="yes"
+pidfile="/run/sui.pid"
+directory="${APP_DIR}"
+export SUI_WEB_DIR="${APP_DIR}/web"
+export SUI_MIGRATIONS_DIR="${APP_DIR}/migrations"
+
+depend() {
+    need net localmount
+}
+
+start_pre() {
+    mkdir -p "${APP_DIR}/db" /run
+}

@@ -15,6 +15,7 @@ concurrency:
 
 env:
   SING_BOX_VERSION: "1.13.5"
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 jobs:
   ensure-release:
@@ -32,19 +33,10 @@ jobs:
 
   build-linux:
     needs: ensure-release
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - { arch: amd64, docker_platform: linux/amd64 }
-          - { arch: arm64, docker_platform: linux/arm64 }
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6.0.2
-
-      - name: Setup QEMU
-        uses: docker/setup-qemu-action@v4.0.0
 
       - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v4.0.0
@@ -53,7 +45,7 @@ jobs:
         run: |
           rm -rf "$RUNNER_TEMP/export"
           docker buildx build \
-            --platform "${{ matrix.docker_platform }}" \
+            --platform linux/amd64 \
             --build-arg SING_BOX_VERSION="${{ env.SING_BOX_VERSION }}" \
             --output "type=local,dest=$RUNNER_TEMP/export" \
             -f Dockerfile \
@@ -62,35 +54,56 @@ jobs:
       - name: Assemble release bundle
         run: |
           rm -rf s-ui
-          mkdir -p s-ui
+          mkdir -p s-ui/packaging/openrc
           cp "$RUNNER_TEMP/export/app/sui" s-ui/
           cp "$RUNNER_TEMP/export/app/sing-box" s-ui/
-          if [ -f "$RUNNER_TEMP/export/app/libcronet.so" ]; then
-            cp "$RUNNER_TEMP/export/app/libcronet.so" s-ui/
-          fi
           cp -R "$RUNNER_TEMP/export/app/web" s-ui/
           cp -R "$RUNNER_TEMP/export/app/migrations" s-ui/
+          cp packaging/openrc/sui s-ui/packaging/openrc/
           cp s-ui.service s-ui/
           cp s-ui.sh s-ui/
           cp install.sh s-ui/
-          chmod +x s-ui/sui s-ui/sing-box s-ui/s-ui.sh s-ui/install.sh
-          tar -zcf "s-ui-linux-${{ matrix.arch }}.tar.gz" s-ui
+          chmod +x s-ui/sui s-ui/sing-box s-ui/s-ui.sh s-ui/install.sh s-ui/packaging/openrc/sui
+          tar -zcf s-ui-linux-amd64.tar.gz s-ui
 
-      - name: Upload artifact
+      - name: Assemble CT rootfs bundle
+        run: |
+          tar -C "$RUNNER_TEMP/export" -zcf yt-home-rust-ct-amd64-rootfs.tar.gz .
+
+      - name: Upload linux artifact
         uses: actions/upload-artifact@v7.0.0
         with:
-          name: s-ui-linux-${{ matrix.arch }}
-          path: ./s-ui-linux-${{ matrix.arch }}.tar.gz
+          name: s-ui-linux-amd64
+          path: ./s-ui-linux-amd64.tar.gz
           retention-days: 30
           if-no-files-found: error
 
-      - name: Upload to release
+      - name: Upload CT rootfs artifact
+        uses: actions/upload-artifact@v7.0.0
+        with:
+          name: yt-home-rust-ct-amd64-rootfs
+          path: ./yt-home-rust-ct-amd64-rootfs.tar.gz
+          retention-days: 30
+          if-no-files-found: error
+
+      - name: Upload linux asset to release
         if: startsWith(github.ref, 'refs/tags/')
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           tag: ${{ github.ref_name }}
-          file: s-ui-linux-${{ matrix.arch }}.tar.gz
-          asset_name: s-ui-linux-${{ matrix.arch }}.tar.gz
+          file: s-ui-linux-amd64.tar.gz
+          asset_name: s-ui-linux-amd64.tar.gz
+          prerelease: false
+          overwrite: true
+
+      - name: Upload CT rootfs asset to release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ github.ref_name }}
+          file: yt-home-rust-ct-amd64-rootfs.tar.gz
+          asset_name: yt-home-rust-ct-amd64-rootfs.tar.gz
           prerelease: false
           overwrite: true

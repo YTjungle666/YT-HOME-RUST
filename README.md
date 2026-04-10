@@ -6,34 +6,22 @@
 ![License](https://img.shields.io/github/license/YTjungle666/YT-HOME-RUST)
 
 `YT HOME RUST` 是一个面向家庭网络回家场景的 `sing-box` 控制面板。  
-它把入站、客户端、二维码、订阅、TLS / Reality、运行状态和访问边界统一到一个中文面板里，适合部署在 `PVE`、`NAS`、小主机或家庭服务器上。
+它把入站、客户端、二维码、订阅、TLS / Reality、运行状态和访问边界统一到一个中文面板里，适合部署在家庭服务器、`PVE`、`NAS` 和小主机上。
 
-## 这是什么
+## 它解决什么问题
 
-如果你希望：
-
-- 用一个面板统一管理回家节点，而不是手工拼配置
-- 给手机、平板、电脑稳定下发二维码和订阅
-- 区分“普通公网访问”和“代理回家访问”
-- 在不改动习惯的前提下，把节点管理做得更稳、更清晰
-
-那么 `YT HOME RUST` 就是这个产品。
+- 不再手工拼回家节点配置
+- 用一个面板管理入站、客户端、订阅和二维码
+- 明确区分普通公网访问节点与“代理回家”节点
+- 让手机、平板、电脑快速导入并稳定使用
 
 ## 你会得到什么
 
-- 统一的中文管理界面
-- 常见协议与 Reality 场景的集中配置能力
-- 可直接导入客户端的二维码、链接与订阅
-- 更明确的入站边界控制
-- 默认账号即可启动，部署完成后就能进入面板
-
-## 适合部署在哪里
-
-- 家庭宽带回家机
-- `PVE` 或 `LXC/CT`
-- `NAS`
-- 云服务器
-- 低功耗小主机
+- 简体中文界面
+- 适合家庭回家场景的 `sing-box` 控制面
+- 可直接导入客户端的订阅、链接与二维码
+- 默认收紧的访问边界控制
+- Rust 后端带来的更稳资源占用和更清晰的结构
 
 ## 默认信息
 
@@ -41,9 +29,9 @@
 - 订阅地址：`http://<你的地址>:2096/sub/`
 - 默认账号：`admin`
 - 默认密码：`admin`
-- 支持架构：`amd64`、`arm64`
+- 当前发布平台：`linux/amd64`
 
-## 部署方式 1：一键安装脚本
+## 部署方式 1：一键安装
 
 适合已经有 Linux 主机，希望几分钟内装好就开始用。
 
@@ -59,22 +47,23 @@ bash <(curl -Ls https://raw.githubusercontent.com/YTjungle666/YT-HOME-RUST/main/
 bash <(curl -Ls https://raw.githubusercontent.com/YTjungle666/YT-HOME-RUST/main/install.sh) v2.0.0
 ```
 
-安装完成后访问：
+说明：
 
-- 面板：`http://你的服务器IP或域名/`
-- 订阅：`http://你的服务器IP或域名:2096/sub/`
+- 支持 `systemd` 和 `OpenRC`
+- Alpine 请先保证系统里有 `bash`
+- 安装完成后直接访问面板地址即可
 
 ## 部署方式 2：Docker / GHCR 镜像
 
-适合已经使用 Docker 或 Compose 管理服务的环境。
+适合已经用 Docker 管理服务的环境。
 
-镜像发布到：
+镜像地址：
 
 ```text
 ghcr.io/ytjungle666/yt-home-rust
 ```
 
-### 直接运行
+直接运行：
 
 ```bash
 docker run -d \
@@ -86,7 +75,7 @@ docker run -d \
   ghcr.io/ytjungle666/yt-home-rust:latest
 ```
 
-### 使用 Compose
+使用 Compose：
 
 ```bash
 mkdir -p yt-home-rust && cd yt-home-rust
@@ -94,40 +83,20 @@ curl -LO https://raw.githubusercontent.com/YTjungle666/YT-HOME-RUST/main/docker-
 docker compose up -d
 ```
 
-这个镜像已经按部署场景做了最小化收敛，既能直接作为 Docker 镜像运行，也能导出成 `PVE CT` 根文件系统。
-
 ## 部署方式 3：PVE CT 模板
 
-适合已经习惯用 `PVE LXC/CT` 跑服务的环境。
+适合已经习惯在 `PVE LXC/CT` 里直接跑服务的环境。
 
-可以直接把 Docker 镜像导出为 rootfs，再创建 CT。
+Release 页面会直接提供可创建 CT 的 rootfs 包：
 
-### 1. 拉取镜像
-
-```bash
-docker pull ghcr.io/ytjungle666/yt-home-rust:latest
+```text
+yt-home-rust-ct-amd64-rootfs.tar.gz
 ```
 
-### 2. 导出 rootfs
+创建示例：
 
 ```bash
-cid=$(docker create ghcr.io/ytjungle666/yt-home-rust:latest)
-docker export "$cid" | gzip > yt-home-rust-ct-rootfs.tar.gz
-docker rm "$cid"
-```
-
-### 3. 上传到 PVE 宿主机
-
-把 `yt-home-rust-ct-rootfs.tar.gz` 放到 PVE 宿主机，例如：
-
-```bash
-/var/lib/vz/template/cache/yt-home-rust-ct-rootfs.tar.gz
-```
-
-### 4. 创建 CT
-
-```bash
-pct create 210 local:vztmpl/yt-home-rust-ct-rootfs.tar.gz \
+pct create 210 local:vztmpl/yt-home-rust-ct-amd64-rootfs.tar.gz \
   --hostname yt-home-rust \
   --cores 2 \
   --memory 1024 \
@@ -135,27 +104,27 @@ pct create 210 local:vztmpl/yt-home-rust-ct-rootfs.tar.gz \
   --net0 name=eth0,bridge=vmbr0,ip=dhcp
 ```
 
-### 5. 启动 CT
+启动：
 
 ```bash
 pct start 210
 ```
 
-镜像内已经内置 `CT init` 启动脚本，CT 启动后会自动拉起 `YT HOME RUST`。
+这个 rootfs 已经内置 CT 启动入口，创建后可直接启动，不依赖额外容器运行时。
 
 ## 发布产物
 
-- Linux：`s-ui-linux-amd64.tar.gz`、`s-ui-linux-arm64.tar.gz`
-- Windows：`s-ui-windows-amd64.zip`、`s-ui-windows-arm64.zip`
-- Docker：`ghcr.io/ytjungle666/yt-home-rust`
+- Linux 安装包：`s-ui-linux-amd64.tar.gz`
+- PVE CT rootfs：`yt-home-rust-ct-amd64-rootfs.tar.gz`
+- Docker 镜像：`ghcr.io/ytjungle666/yt-home-rust`
 - Release 页面：<https://github.com/YTjungle666/YT-HOME-RUST/releases>
 
 ## 使用建议
 
-- 面板部署在内网服务器，公网只放必要端口
-- 只把确实需要“回家访问”的入站开启“代理回家”
+- 面板部署在内网服务器，公网只开放必要端口
+- 只有确实需要回家访问的入站才开启“代理回家”
 - Reality 节点建议使用你自己可控的域名
-- 首次登录后，按自己的环境修改面板端口、订阅地址和域名
+- 首次登录后按自己的环境修改面板端口、订阅地址和域名
 
 ## 许可证
 

@@ -149,20 +149,25 @@ impl CoreService {
                 .map(|process| (process.pid, process.config_path.clone(), state.running))
         };
 
-        let Some((pid, config_path, running)) = maybe_reload else {
-            return self.start_with_config(normalized).await;
-        };
-        if !running {
-            return self.start_with_config(normalized).await;
-        }
-
         #[cfg(not(unix))]
         {
+            let Some((_, _, running)) = maybe_reload else {
+                return self.start_with_config(normalized).await;
+            };
+            if !running {
+                return self.start_with_config(normalized).await;
+            }
             return self.restart_with_config(normalized).await;
         }
 
         #[cfg(unix)]
         {
+            let Some((pid, config_path, running)) = maybe_reload else {
+                return self.start_with_config(normalized).await;
+            };
+            if !running {
+                return self.start_with_config(normalized).await;
+            }
             let binary = resolve_sing_box_binary()?;
             let temp_path = config_path.with_extension(format!("{}.tmp", Uuid::new_v4()));
             write_config_file(&temp_path, &normalized).await?;

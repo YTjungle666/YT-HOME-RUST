@@ -33,6 +33,96 @@ fi
 
 echo "The OS release is: $release"
 
+service_manager() {
+    if command -v systemctl >/dev/null 2>&1 && [[ -d /run/systemd/system ]]; then
+        echo "systemd"
+    elif command -v rc-service >/dev/null 2>&1; then
+        echo "openrc"
+    else
+        echo "none"
+    fi
+}
+
+SERVICE_MANAGER=$(service_manager)
+
+service_exists() {
+    case "${SERVICE_MANAGER}" in
+        systemd)
+            [[ -f "/etc/systemd/system/$1.service" || -f "/usr/lib/systemd/system/$1.service" || -f "/lib/systemd/system/$1.service" ]]
+            ;;
+        openrc)
+            [[ -x "/etc/init.d/$1" ]]
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+}
+
+service_start_cmd() {
+    case "${SERVICE_MANAGER}" in
+        systemd) systemctl start "$1" ;;
+        openrc) rc-service "$1" start ;;
+        *) return 1 ;;
+    esac
+}
+
+service_stop_cmd() {
+    case "${SERVICE_MANAGER}" in
+        systemd) systemctl stop "$1" ;;
+        openrc) rc-service "$1" stop ;;
+        *) return 1 ;;
+    esac
+}
+
+service_restart_cmd() {
+    case "${SERVICE_MANAGER}" in
+        systemd) systemctl restart "$1" ;;
+        openrc) rc-service "$1" restart ;;
+        *) return 1 ;;
+    esac
+}
+
+service_status_cmd() {
+    case "${SERVICE_MANAGER}" in
+        systemd) systemctl status "$1" -l ;;
+        openrc) rc-service "$1" status ;;
+        *) return 1 ;;
+    esac
+}
+
+service_enable_cmd() {
+    case "${SERVICE_MANAGER}" in
+        systemd) systemctl enable "$1" ;;
+        openrc) rc-update add "$1" default ;;
+        *) return 1 ;;
+    esac
+}
+
+service_disable_cmd() {
+    case "${SERVICE_MANAGER}" in
+        systemd) systemctl disable "$1" ;;
+        openrc) rc-update del "$1" default ;;
+        *) return 1 ;;
+    esac
+}
+
+service_is_active() {
+    case "${SERVICE_MANAGER}" in
+        systemd) systemctl is-active --quiet "$1" ;;
+        openrc) rc-service "$1" status >/dev/null 2>&1 ;;
+        *) return 1 ;;
+    esac
+}
+
+service_is_enabled() {
+    case "${SERVICE_MANAGER}" in
+        systemd) systemctl is-enabled --quiet "$1" ;;
+        openrc) rc-update show default 2>/dev/null | awk '{print $1}' | grep -qx "$1" ;;
+        *) return 1 ;;
+    esac
+}
+
 confirm() {
     if [[ $# > 1 ]]; then
         echo && read -p "$1 [Default$2]: " temp
@@ -115,11 +205,14 @@ uninstall() {
         fi
         return 0
     fi
-    systemctl stop s-ui
-    systemctl disable s-ui
+    service_stop_cmd s-ui >/dev/null 2>&1 || true
+    service_disable_cmd s-ui >/dev/null 2>&1 || true
     rm /etc/systemd/system/s-ui.service -f
-    systemctl daemon-reload
-    systemctl reset-failed
+    rm /etc/init.d/s-ui -f
+    if [[ "${SERVICE_MANAGER}" == "systemd" ]]; then
+        systemctl daemon-reload
+        systemctl reset-failed
+    fi
     rm /etc/s-ui/ -rf
     rm /usr/local/s-ui/ -rf
 
@@ -205,7 +298,7 @@ start() {
         echo ""
         LOGI -e "${1} is running, No need to start again, If you need to restart, please select restart"
     else
-        systemctl start $1
+        service_start_cmd $1
         sleep 2
         check_status $1
         if [[ $? == 0 ]]; then
@@ -226,9 +319,9 @@ stop() {
         echo ""
         LOGI "${1} stopped, No need to stop again!"
     else
-        systemctl stop $1
+        service_stop_cmd $1
         sleep 2
-        check_status
+        check_status $1
         if [[ $? == 1 ]]; then
             LOGI "${1} stopped successfully"
         else
@@ -242,7 +335,7 @@ stop() {
 }
 
 restart() {
-    systemctl restart $1
+    service_restart_cmd $1
     sleep 2
     check_status $1
     if [[ $? == 0 ]]; then
@@ -256,14 +349,14 @@ restart() {
 }
 
 status() {
-    systemctl status s-ui -l
+    service_status_cmd s-ui
     if [[ $# == 0 ]]; then
         before_show_menu
     fi
 }
 
 enable() {
-    systemctl enable $1
+    service_enable_cmd $1
     if [[ $? == 0 ]]; then
         LOGI "Set ${1} to boot automatically on startup successfully"
     else
@@ -276,7 +369,7 @@ enable() {
 }
 
 disable() {
-    systemctl disable $1
+    service_disable_cmd $1
     if [[ $? == 0 ]]; then
         LOGI "Autostart ${1} Cancelled successfully"
     else
@@ -289,14 +382,21 @@ disable() {
 }
 
 show_log() {
-    journalctl -u $1.service -e --no-pager -f
+    if [[ "${SERVICE_MANAGER}" == "systemd" ]]; then
+        journalctl -u $1.service -e --no-pager -f
+    elif [[ "${SERVICE_MANAGER}" == "openrc" ]]; then
+        rc-service "$1" status
+        tail -n 200 /var/log/messages 2>/dev/null || true
+    else
+        LOGE "No supported service manager was detected"
+    fi
     if [[ $# == 1 ]]; then
         before_show_menu
     fi
 }
 
 update_shell() {
-    wget -O /usr/bin/s-ui -N --no-check-certificate https://github.com/${repo}/raw/main/s-ui.sh
+    wget -O /usr/bin/s-ui -N --no-check-certificate https://raw.githubusercontent.com/${repo}/main/s-ui.sh
     if [[ $? != 0 ]]; then
         echo ""
         LOGE "Failed to download script, Please check whether the machine can connect Github"
@@ -308,11 +408,10 @@ update_shell() {
 }
 
 check_status() {
-    if [[ ! -f "/etc/systemd/system/$1.service" ]]; then
+    if ! service_exists "$1"; then
         return 2
     fi
-    temp=$(systemctl status "$1" | grep Active | awk '{print $3}' | cut -d "(" -f2 | cut -d ")" -f1)
-    if [[ x"${temp}" == x"running" ]]; then
+    if service_is_active "$1"; then
         return 0
     else
         return 1
@@ -320,8 +419,7 @@ check_status() {
 }
 
 check_enabled() {
-    temp=$(systemctl is-enabled $1)
-    if [[ x"${temp}" == x"enabled" ]]; then
+    if service_is_enabled "$1"; then
         return 0
     else
         return 1
@@ -384,7 +482,7 @@ show_enable_status() {
 
 check_s-ui_status() {
     count=$(ps -ef | grep "sui" | grep -v "grep" | wc -l)
-    if [[ count -ne 0 ]]; then
+    if [[ "${count}" -ne 0 ]]; then
         return 0
     else
         return 1
@@ -451,6 +549,9 @@ enable_bbr() {
         ;;
     arch | manjaro | parch)
         pacman -Sy --noconfirm ca-certificates
+        ;;
+    alpine)
+        apk add --no-cache ca-certificates
         ;;
     *)
         echo -e "${red}Unsupported operating system. Please check the script and install the necessary packages manually.${plain}\n"

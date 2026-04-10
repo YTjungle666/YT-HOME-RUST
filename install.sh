@@ -28,15 +28,57 @@ echo "The OS release is: $release"
 arch() {
     case "$(uname -m)" in
     x86_64 | x64 | amd64) echo 'amd64' ;;
-    armv8* | armv8 | arm64 | aarch64) echo 'arm64' ;;
-    *) echo -e "${green}Unsupported CPU architecture. Released binaries are available for amd64 and arm64 only.${plain}" && rm -f install.sh && exit 1 ;;
+    *) echo -e "${green}Unsupported CPU architecture. Released binaries are available for linux/amd64 only.${plain}" && rm -f install.sh && exit 1 ;;
     esac
 }
 
 echo "arch: $(arch)"
 
+is_systemd() {
+    command -v systemctl >/dev/null 2>&1 && [[ -d /run/systemd/system ]]
+}
+
+is_openrc() {
+    command -v rc-service >/dev/null 2>&1
+}
+
+stop_service_if_exists() {
+    if is_systemd; then
+        systemctl stop s-ui >/dev/null 2>&1 || true
+    elif is_openrc; then
+        rc-service s-ui stop >/dev/null 2>&1 || true
+    fi
+}
+
+install_service_files() {
+    if is_systemd; then
+        cp -f s-ui/*.service /etc/systemd/system/
+        systemctl daemon-reload
+    elif is_openrc; then
+        install -Dm755 s-ui/packaging/openrc/sui /etc/init.d/s-ui
+    else
+        echo -e "${red}Unsupported init system. Only systemd and OpenRC are supported.${plain}"
+        exit 1
+    fi
+}
+
+enable_and_start_service() {
+    if is_systemd; then
+        systemctl enable s-ui --now
+    elif is_openrc; then
+        rc-update add s-ui default >/dev/null 2>&1 || true
+        rc-service s-ui restart >/dev/null 2>&1 || rc-service s-ui start
+    else
+        echo -e "${red}Unsupported init system. Only systemd and OpenRC are supported.${plain}"
+        exit 1
+    fi
+}
+
 install_base() {
     case "${release}" in
+    alpine)
+        apk add --no-cache bash curl wget tar tzdata ca-certificates openrc
+        ;;
     centos | almalinux | rocky | oracle)
         yum -y update && yum install -y -q wget curl tar tzdata
         ;;
@@ -110,7 +152,7 @@ config_after_install() {
 }
 
 prepare_services() {
-    if [[ -f "/etc/systemd/system/sing-box.service" ]]; then
+    if is_systemd && [[ -f "/etc/systemd/system/sing-box.service" ]]; then
         echo -e "${yellow}Stopping sing-box service... ${plain}"
         systemctl stop sing-box
         rm -f /usr/local/s-ui/bin/sing-box /usr/local/s-ui/bin/runSingbox.sh /usr/local/s-ui/bin/signal
@@ -121,7 +163,9 @@ prepare_services() {
         echo -e "Please check the content and delete it manually after migration ${plain}"
         echo -e "###############################################################"
     fi
-    systemctl daemon-reload
+    if is_systemd; then
+        systemctl daemon-reload
+    fi
 }
 
 install_s-ui() {
@@ -156,7 +200,7 @@ install_s-ui() {
         else
             fresh_install=1
         fi
-        systemctl stop s-ui
+        stop_service_if_exists
     else
         fresh_install=1
     fi
@@ -167,13 +211,13 @@ install_s-ui() {
     chmod +x s-ui/sui s-ui/s-ui.sh s-ui/sing-box
     cp s-ui/s-ui.sh /usr/bin/s-ui
     cp -rf s-ui /usr/local/
-    cp -f s-ui/*.service /etc/systemd/system/
+    install_service_files
     rm -rf s-ui
 
     config_after_install
     prepare_services
 
-    systemctl enable s-ui --now
+    enable_and_start_service
 
     echo -e "${green}s-ui v${last_version}${plain} installation finished, it is up and running now..."
     echo -e "You may access the Panel with following URL(s):${green}"

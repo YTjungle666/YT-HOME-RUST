@@ -2,6 +2,7 @@
 services:
   s-ui:
     image: ghcr.io/ytjungle666/yt-home-rust:latest
+    platform: linux/amd64
     container_name: yt-home
     hostname: "yt-home"
     volumes:
