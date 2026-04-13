@@ -71,7 +71,7 @@ jobs:
           tar -C "$RUNNER_TEMP/export" -zcf yt-home-rust-ct-amd64-rootfs.tar.gz .
 
       - name: Upload linux artifact
-        uses: actions/upload-artifact@v7.0.0
+        uses: actions/upload-artifact@v7.0.1
         with:
           name: s-ui-linux-amd64
           path: ./s-ui-linux-amd64.tar.gz
@@ -79,7 +79,7 @@ jobs:
           if-no-files-found: error
 
       - name: Upload CT rootfs artifact
-        uses: actions/upload-artifact@v7.0.0
+        uses: actions/upload-artifact@v7.0.1
         with:
           name: yt-home-rust-ct-amd64-rootfs
           path: ./yt-home-rust-ct-amd64-rootfs.tar.gz
